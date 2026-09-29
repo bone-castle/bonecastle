@@ -737,36 +737,25 @@ function openListingDetail(listing) {
 }
 
 /* ============================================================
-   ORDER — Always ensure order exists
+   ORDER — Ensure order exists
    ============================================================ */
 async function ensureOrderExists(chatId, listing, silent) {
-  /* Check if order already exists for this chat */
   const { data: existingOrder } = await sb.from('orders').select('id').eq('chat_id', chatId).maybeSingle();
   if (existingOrder) return existingOrder;
 
-  /* Try full insert first */
   let { data: newOrder, error: err1 } = await sb.from('orders').insert({
-    listing_id: listing.id,
-    buyer_id: ME.id,
-    chat_id: chatId,
-    amount_usd: listing.price_usd,
-    payment_method: 'COD',
-    delivery_status: 'pending',
-    details_status: 'none'
+    listing_id: listing.id, buyer_id: ME.id, chat_id: chatId,
+    amount_usd: listing.price_usd, payment_method: 'COD',
+    delivery_status: 'pending', details_status: 'none'
   }).select().single();
 
   if (err1) {
     console.warn('Full order insert failed:', err1);
-    /* Try minimal insert */
     const { data: minOrder, error: err2 } = await sb.from('orders').insert({
-      listing_id: listing.id,
-      buyer_id: ME.id,
-      chat_id: chatId,
-      amount_usd: listing.price_usd
+      listing_id: listing.id, buyer_id: ME.id, chat_id: chatId, amount_usd: listing.price_usd
     }).select().single();
-
     if (err2) {
-      console.error('Minimal order insert also failed:', err2);
+      console.error('Minimal order insert failed:', err2);
       if (!silent) toast('Order creation failed: ' + err2.message, 'err');
       return null;
     }
@@ -777,14 +766,10 @@ async function ensureOrderExists(chatId, listing, silent) {
 
 async function startOrder(listing) {
   ACTIVE_LISTING = listing;
-
-  /* 1. Check existing chat */
   const { data: existingChat } = await sb.from('chats')
     .select('*').eq('listing_id', listing.id).eq('buyer_id', ME.id).maybeSingle();
 
   let chat = existingChat;
-
-  /* 2. Create chat if not exists */
   if (!chat) {
     const { data: newChat, error: chatErr } = await sb.from('chats')
       .insert({ listing_id: listing.id, buyer_id: ME.id }).select().single();
@@ -792,25 +777,18 @@ async function startOrder(listing) {
     chat = newChat;
   }
 
-  /* 3. Ensure order exists (creates if not) */
   const isNewOrder = !(await sb.from('orders').select('id').eq('chat_id', chat.id).maybeSingle()).data;
   const order = await ensureOrderExists(chat.id, listing, false);
 
-  /* 4. Send welcome message only for new order */
   if (isNewOrder && order) {
     await sb.from('messages').insert({
-      chat_id: chat.id,
-      sender_id: ME.id,
-      sender_role: 'buyer',
+      chat_id: chat.id, sender_id: ME.id, sender_role: 'buyer',
       text: `Hello! I'm interested in "${listing.title}" ($${listing.price_usd}). Can we discuss the details?`,
       message_type: 'text'
     });
   }
 
-  if (!order) {
-    toast('Could not create order. Please try again.', 'err');
-    return;
-  }
+  if (!order) { toast('Could not create order. Try again.', 'err'); return; }
 
   closeModal('detailModal');
   toast('Chat opened — discuss with admin', 'ok');
@@ -858,15 +836,12 @@ async function openChat(chatId, listing) {
   const img = (listing?.images && listing.images[0]) || '';
   $('chatThumb').innerHTML = img ? `<img src="${esc(img)}" alt="">` : '';
 
-  /* Fetch or auto-create order */
   const { data: orderData } = await sb.from('orders').select('*').eq('chat_id', chatId).maybeSingle();
   ACTIVE_ORDER = orderData;
 
   if (!ACTIVE_ORDER && listing && ME.role !== 'admin') {
-    /* Auto-create order if missing (e.g. for buyer) */
     ACTIVE_ORDER = await ensureOrderExists(chatId, listing, true);
   }
-
   if (ACTIVE_ORDER && !ACTIVE_ORDER.details_status) ACTIVE_ORDER.details_status = 'none';
 
   renderChatActions();
@@ -875,6 +850,9 @@ async function openChat(chatId, listing) {
   setTimeout(() => $('chatInput').focus(), 300);
 }
 
+/* ============================================================
+   CHAT ACTIONS
+   ============================================================ */
 function renderChatActions() {
   const box = $('chatActions');
   box.innerHTML = '';
@@ -901,19 +879,23 @@ function renderChatActions() {
     span.textContent = '⏳ Waiting for buyer...';
     box.appendChild(span);
   } else if (status === 'user_submitted') {
+    /* NEW BUTTON: Enter Delivery Details */
     const btn = document.createElement('button');
     btn.className = 'gold';
-    btn.textContent = '✓ Confirm Details';
+    btn.textContent = '📦 Enter Delivery Details';
     btn.addEventListener('click', openAdminDetailsForm);
     box.appendChild(btn);
   } else if (status === 'confirmed') {
     const span = document.createElement('div');
     span.style.cssText = 'flex:1;text-align:center;font-size:10px;color:var(--green);letter-spacing:1px;padding:9px';
-    span.textContent = '✓ Delivery Confirmed';
+    span.textContent = '✓ Delivery Details Sent';
     box.appendChild(span);
   }
 }
 
+/* ============================================================
+   ADMIN: Ask for details
+   ============================================================ */
 async function askForDetails() {
   if (!ACTIVE_ORDER || ME.role !== 'admin') return;
   if (!confirm('Ask the buyer to enter location & time?')) return;
@@ -932,10 +914,17 @@ async function askForDetails() {
   renderChatActions();
 }
 
+/* ============================================================
+   USER: Enter Order Details
+   ============================================================ */
 function openUserDetailsForm() {
   if (!ACTIVE_ORDER) { toast('No order found', 'err'); return; }
   $('formModalTitle').textContent = 'Enter Order Details';
   $('formModalBody').innerHTML = `
+    <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;color:var(--text);line-height:1.6">
+      <b style="color:var(--gold)">📋 Admin needs your details</b><br>
+      Please provide your preferred delivery location and time.
+    </div>
     <div class="field"><label>Delivery Location</label><input type="text" id="uLoc" placeholder="Enter your address/location"></div>
     <div class="field"><label>Preferred Time</label><input type="text" id="uTime" placeholder="e.g. Tomorrow 4:00 PM"></div>
     <button class="btn gold" id="uSubmit">Submit Details</button>
@@ -968,17 +957,24 @@ function openUserDetailsForm() {
   openModal('formModal');
 }
 
+/* ============================================================
+   ADMIN: Enter Delivery Details (NEW)
+   ============================================================ */
 function openAdminDetailsForm() {
   if (!ACTIVE_ORDER) return;
-  $('formModalTitle').textContent = 'Confirm Delivery Details';
+  $('formModalTitle').textContent = 'Enter Delivery Details';
   $('formModalBody').innerHTML = `
     <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;color:var(--text);line-height:1.6">
-      <b style="color:var(--blue)">Buyer's Request:</b><br>
-      Location: ${esc(ACTIVE_ORDER.user_location || '-')}<br>
-      Time: ${esc(ACTIVE_ORDER.user_time || '-')}
+      <b style="color:var(--blue)">📥 Buyer's Request:</b><br>
+      <b>Location:</b> ${esc(ACTIVE_ORDER.user_location || '-')}<br>
+      <b>Time:</b> ${esc(ACTIVE_ORDER.user_time || '-')}
     </div>
-    <div class="field"><label>Confirmed Delivery Location</label><input type="text" id="aLoc" placeholder="Enter delivery location" value="${esc(ACTIVE_ORDER.user_location || '')}"></div>
-    <div class="field"><label>Confirmed Delivery Time</label><input type="text" id="aTime" placeholder="e.g. Tomorrow 4:00 PM" value="${esc(ACTIVE_ORDER.user_time || '')}"></div>
+    <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;color:var(--text);line-height:1.6">
+      <b style="color:var(--gold)">📦 Your Delivery Details</b><br>
+      Enter the ACTUAL delivery location and time. The buyer will see these.
+    </div>
+    <div class="field"><label>Delivery Location</label><input type="text" id="aLoc" placeholder="Your delivery location" value="${esc(ACTIVE_ORDER.user_location || '')}"></div>
+    <div class="field"><label>Delivery Time</label><input type="text" id="aTime" placeholder="e.g. Tomorrow 4:00 PM" value="${esc(ACTIVE_ORDER.user_time || '')}"></div>
     <button class="btn gold" id="aSubmit">Confirm & Send to Buyer</button>
     <div class="auth-err" id="aErr"></div>
   `;
@@ -986,7 +982,7 @@ function openAdminDetailsForm() {
     const loc = $('aLoc').value.trim();
     const time = $('aTime').value.trim();
     if (!loc || !time) { $('aErr').textContent = 'Both fields required'; return; }
-    $('aSubmit').disabled = true; $('aSubmit').textContent = 'CONFIRMING...';
+    $('aSubmit').disabled = true; $('aSubmit').textContent = 'SENDING...';
 
     const { error } = await sb.from('orders').update({
       admin_location: loc, admin_time: time, details_status: 'confirmed'
@@ -996,14 +992,14 @@ function openAdminDetailsForm() {
 
     await sb.from('messages').insert({
       chat_id: ACTIVE_CHAT, sender_id: ME.id, sender_role: 'admin',
-      text: 'Delivery confirmed', message_type: 'detail_confirmed'
+      text: 'Delivery details sent', message_type: 'detail_confirmed'
     });
 
     ACTIVE_ORDER.admin_location = loc;
     ACTIVE_ORDER.admin_time = time;
     ACTIVE_ORDER.details_status = 'confirmed';
     closeModal('formModal');
-    toast('Delivery details confirmed', 'ok');
+    toast('Delivery details sent to buyer', 'ok');
     loadMessages();
     renderChatActions();
   });
@@ -1030,6 +1026,7 @@ function renderMessages(msgs) {
     const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const delBtn = ME.role === 'admin' ? `<button class="msg-del-btn" data-msgdel="${m.id}" title="Delete">×</button>` : '';
 
+    /* 1. Admin asked buyer for details */
     if (m.message_type === 'detail_request') {
       if (ME.role === 'admin') {
         return `<div class="msg system">📝 Asked buyer for delivery details<div class="meta">${time}</div></div>`;
@@ -1037,16 +1034,18 @@ function renderMessages(msgs) {
       return `<div class="msg-action-box">
         <div class="title">📋 Details Required</div>
         <div class="desc">Admin has requested your delivery details. Please provide location and preferred time.</div>
-        <button onclick="openUserDetailsForm()">Enter Details</button>
+        <button onclick="openUserDetailsForm()">Enter Order Details</button>
       </div>`;
     }
 
+    /* 2. Buyer submitted details — shown to admin */
     if (m.message_type === 'detail_submitted') {
       if (ME.role === 'admin') {
-        return `<div class="msg-action-box details-shown">
-          <div class="title">📥 Buyer Submitted Details</div>
+        return `<div class="msg-action-box">
+          <div class="title">📥 BUYER Submitted Details</div>
           <div class="detail-row"><span class="k">Location</span><span class="v">${esc(ACTIVE_ORDER?.user_location || '-')}</span></div>
           <div class="detail-row"><span class="k">Time</span><span class="v">${esc(ACTIVE_ORDER?.user_time || '-')}</span></div>
+          <div class="desc" style="margin-top:10px;margin-bottom:0">Tap "📦 Enter Delivery Details" at the top to send your delivery location & time.</div>
         </div>`;
       }
       return `<div class="msg-action-box details-shown">
@@ -1055,11 +1054,13 @@ function renderMessages(msgs) {
       </div>`;
     }
 
+    /* 3. Admin sent final delivery details — shown to buyer & admin */
     if (m.message_type === 'detail_confirmed') {
       return `<div class="msg-action-box details-shown">
-        <div class="title">✓ Delivery Confirmed</div>
-        <div class="detail-row"><span class="k">Location</span><span class="v">${esc(ACTIVE_ORDER?.admin_location || '-')}</span></div>
-        <div class="detail-row"><span class="k">Time</span><span class="v">${esc(ACTIVE_ORDER?.admin_time || '-')}</span></div>
+        <div class="title">📦 Delivery Details Confirmed</div>
+        <div class="detail-row"><span class="k">Delivery Location</span><span class="v">${esc(ACTIVE_ORDER?.admin_location || '-')}</span></div>
+        <div class="detail-row"><span class="k">Delivery Time</span><span class="v">${esc(ACTIVE_ORDER?.admin_time || '-')}</span></div>
+        <div class="desc" style="margin-top:10px;margin-bottom:0">Your product will be delivered at this location & time.</div>
       </div>`;
     }
 
@@ -1112,7 +1113,7 @@ function renderOrderCard(o) {
   const listing = o.listings || {};
   const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
   const dStatus = o.details_status || 'none';
-  const detailsLabel = { none: 'Chatting', requested: 'Details Requested', user_submitted: 'Details Submitted', confirmed: 'Details Confirmed' }[dStatus] || 'Chatting';
+  const detailsLabel = { none: 'Chatting', requested: 'Details Requested', user_submitted: 'Details Submitted', confirmed: 'Delivery Confirmed' }[dStatus] || 'Chatting';
   return `<div class="order-card">
     <div class="order-header">
       <span class="order-id">#${o.id.slice(0,8)}</span>
@@ -1121,8 +1122,8 @@ function renderOrderCard(o) {
     <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
     <div class="order-row"><span class="k">Amount</span><span class="v">$${parseFloat(o.amount_usd || 0).toFixed(2)} (COD)</span></div>
     <div class="order-row"><span class="k">Status</span><span class="v">${detailsLabel}</span></div>
-    ${o.admin_location ? `<div class="order-row"><span class="k">Location</span><span class="v">${esc(o.admin_location)}</span></div>` : ''}
-    ${o.admin_time ? `<div class="order-row"><span class="k">Time</span><span class="v">${esc(o.admin_time)}</span></div>` : ''}
+    ${o.admin_location ? `<div class="order-row"><span class="k">Delivery Location</span><span class="v">${esc(o.admin_location)}</span></div>` : ''}
+    ${o.admin_time ? `<div class="order-row"><span class="k">Delivery Time</span><span class="v">${esc(o.admin_time)}</span></div>` : ''}
     <div class="order-row"><span class="k">Date</span><span class="v">${new Date(o.created_at).toLocaleDateString()}</span></div>
   </div>`;
 }
@@ -1194,7 +1195,7 @@ function startPublicChatPolling() {
 }
 
 /* ============================================================
-   ADMIN
+   ADMIN PANEL
    ============================================================ */
 $('addListingBtn').addEventListener('click', async () => {
   const title = $('alTitle').value.trim();
@@ -1345,7 +1346,7 @@ async function loadAdminOrders() {
     const buyerName = buyersMap[o.buyer_id] || 'Unknown';
     const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
     const dStatus = o.details_status || 'none';
-    const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Confirmed' };
+    const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Delivery Confirmed' };
     return `<div class="admin-order">
       <div class="hdr">
         <b>#${o.id.slice(0,8)} · ${esc(listing.title || 'Deleted')}</b>
@@ -1353,8 +1354,8 @@ async function loadAdminOrders() {
       </div>
       <div class="info">
         Buyer: <b>${esc(buyerName)}</b> · $${parseFloat(o.amount_usd).toFixed(2)} (COD)<br>
-        ${o.user_location ? `Buyer: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
-        ${o.admin_location ? `Final: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
+        ${o.user_location ? `Buyer Loc: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
+        ${o.admin_location ? `Delivery Loc: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
         Delivery: ${labels[o.delivery_status] || 'Pending'}
       </div>
       <div class="actions">
@@ -1380,39 +1381,24 @@ async function loadAdminOrders() {
       openChat(b.dataset.oopen, null);
     });
   });
-
-  /* DELETE ORDER — also deletes chat + all messages */
   document.querySelectorAll('[data-odelete]').forEach(b => {
     b.addEventListener('click', async () => {
       if (!confirm('⚠️ This will permanently delete the order, its chat, and ALL messages. Continue?')) return;
       const orderId = b.dataset.odelete;
       const chatId = b.dataset.ochat;
-
       try {
-        /* 1. Delete all messages in the chat */
         if (chatId) {
           await sb.from('messages').delete().eq('chat_id', chatId);
-        }
-
-        /* 2. Delete the chat itself */
-        if (chatId) {
           await sb.from('chats').delete().eq('id', chatId);
         }
-
-        /* 3. Delete the order */
         const { error: ordErr } = await sb.from('orders').delete().eq('id', orderId);
         if (ordErr) throw ordErr;
-
         toast('Order, chat & messages deleted', 'ok');
-
-        /* Close chat modal if it was open for this chat */
         if (ACTIVE_CHAT === chatId) {
           closeModal('chatModal');
           ACTIVE_CHAT = null;
           ACTIVE_ORDER = null;
         }
-
-        /* Refresh everything */
         loadAdminOrders(); loadOrders(); loadChats();
       } catch (e) {
         console.error(e);
