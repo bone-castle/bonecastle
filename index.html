@@ -18,6 +18,8 @@
     --yellow:#ffb800;--yellow-dim:rgba(255,184,0,0.08);
     --blue:#00d4ff;--blue-dim:rgba(0,212,255,0.08);
     --gold:#d4af37;
+    --strong-green:#00e05a;
+    --strong-red:#ff1f1f;
     --mono:'JetBrains Mono',monospace;
     --display:'Cinzel',serif;
     --sans:'Inter',-apple-system,sans-serif;
@@ -66,11 +68,6 @@
   .auth-logo .divider-line:last-child{background:linear-gradient(90deg,var(--gold),transparent)}
   .auth-logo .divider-dot{width:4px;height:4px;background:var(--gold);border-radius:50%;box-shadow:0 0 8px var(--gold)}
   .auth-logo p{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-top:8px}
-  .auth-tabs{display:flex;background:var(--panel2);border-radius:12px;padding:4px;margin-bottom:20px;position:relative;z-index:1}
-  .auth-tab{flex:1;padding:11px;text-align:center;font-size:11px;font-weight:600;letter-spacing:1.5px;
-    color:var(--muted);border-radius:9px;cursor:pointer;transition:all .25s;
-    text-transform:uppercase;border:none;background:transparent;font-family:inherit}
-  .auth-tab.active{background:var(--panel3);color:var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.4)}
   .field{margin-bottom:14px;position:relative;z-index:1}
   .field label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);
     margin-bottom:7px;text-transform:uppercase;font-weight:600}
@@ -79,6 +76,39 @@
     font-size:14px;font-family:inherit;outline:none;transition:all .2s}
   .field input:focus,.field textarea:focus,.field select:focus{
     border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.1)}
+  /* ============ AUTH: username availability result + password eye ============ */
+  .auth-result{
+    display:none;margin-top:14px;padding:11px 13px;border-radius:11px;
+    font-size:11.5px;font-weight:700;letter-spacing:.5px;line-height:1.5;
+    text-align:center;animation:cardFade .3s;
+  }
+  .auth-result.show{display:block}
+  .auth-result.unavailable{
+    background:rgba(255,31,31,0.09);border:1.5px solid rgba(255,31,31,0.5);
+    color:var(--strong-red);text-shadow:0 0 10px rgba(255,31,31,0.4);
+  }
+  .auth-result.available{
+    background:rgba(0,224,90,0.09);border:1.5px solid rgba(0,224,90,0.5);
+    color:var(--strong-green);text-shadow:0 0 10px rgba(0,224,90,0.4);
+  }
+  .pass-wrap{position:relative;width:100%}
+  .pass-wrap input{padding-right:52px !important}
+  .pass-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:transparent;border:none;color:var(--muted);
+    width:40px;height:40px;border-radius:50%;
+    display:grid;place-items:center;cursor:pointer;transition:all .2s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pass-toggle:hover,.pass-toggle:active{color:var(--white);background:rgba(255,255,255,0.05)}
+  .pass-toggle svg{width:20px;height:20px;stroke:currentColor;fill:none;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .auth-hint{
+    font-size:10.5px;color:var(--muted);text-align:center;
+    margin-top:14px;line-height:1.6;letter-spacing:.3px;
+  }
+  .auth-hint b{color:var(--gold);font-weight:700}
+  /* ==================================================================== */
   .btn{width:100%;padding:15px;border-radius:11px;border:none;
     background:linear-gradient(180deg,#fff,#e8e8e8);color:#000;font-size:12px;
     font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
@@ -115,7 +145,7 @@
     cursor:pointer;text-transform:uppercase;font-family:inherit;transition:all .25s;white-space:nowrap}
   .tab.active{background:var(--white);color:#000;border-color:var(--white);box-shadow:0 0 12px rgba(255,255,255,0.15)}
   .tab:active{transform:scale(.96)}
-  /* ============ NOTICE BOARD (NEW) ============ */
+  /* ============ NOTICE BOARD ============ */
   .notice-board{
     margin-top:2px;
     background:linear-gradient(180deg,rgba(212,175,55,0.09),rgba(212,175,55,0.02));
@@ -143,7 +173,28 @@
     flex-shrink:0;transition:all .15s;font-family:inherit}
   .notice-item .del:active{transform:scale(.85)}
   .notice-empty{font-size:10px;color:var(--muted);text-align:center;padding:4px}
-  /* =========================================== */
+  /* ============ ONLINE INDICATOR (NEW) ============ */
+  .online-dot-sm{
+    width:8px;height:8px;border-radius:50%;background:#3a3a3a;
+    display:inline-block;margin-right:6px;flex-shrink:0;
+    vertical-align:middle;transition:all .3s;
+  }
+  .online-dot-sm.online{
+    background:var(--green);
+    box-shadow:0 0 8px var(--green),0 0 12px rgba(0,255,102,0.5);
+    animation:pulse 2s infinite;
+  }
+  .online-dot-md{
+    width:9px;height:9px;border-radius:50%;background:#3a3a3a;
+    display:inline-block;margin-right:6px;flex-shrink:0;
+    vertical-align:middle;transition:all .3s;
+  }
+  .online-dot-md.online{
+    background:var(--green);
+    box-shadow:0 0 8px var(--green),0 0 12px rgba(0,255,102,0.5);
+    animation:pulse 2s infinite;
+  }
+  /* ============================================= */
   main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:18px 14px 40px}
   .view{display:none;animation:viewIn .4s cubic-bezier(.2,.9,.3,1)}
   .view.active{display:block}
@@ -168,7 +219,9 @@
   .chat-thumb{width:48px;height:48px;border-radius:10px;background:var(--panel2);overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
   .chat-thumb img{width:100%;height:100%;object-fit:cover}
   .chat-meta{flex:1;min-width:0}
-  .chat-meta .title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-meta .title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center}
+  .chat-meta .title .uname{color:var(--white)}
+  .chat-meta .title .tag{color:var(--muted);font-weight:500;font-size:10px;margin-left:5px}
   .chat-meta .preview{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chat-meta .time{font-size:9px;color:var(--dim);letter-spacing:.5px;margin-top:3px}
   .order-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -199,7 +252,7 @@
   @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
   .pubmsg.mine{align-self:flex-end;background:linear-gradient(180deg,#fff,#e5e5e5);color:#000;border-bottom-right-radius:4px}
   .pubmsg.other{align-self:flex-start;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-bottom-left-radius:4px}
-  .pubmsg .meta{font-size:9px;opacity:.65;margin-top:4px;letter-spacing:.4px}
+  .pubmsg .meta{font-size:9px;opacity:.65;margin-top:4px;letter-spacing:.4px;display:flex;align-items:center;gap:5px}
   .pubmsg .meta .name{font-weight:700;color:var(--gold)}
   .pubmsg.mine .meta .name{color:#333}
   .pubmsg .pub-del-btn{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
@@ -244,7 +297,7 @@
   .admin-listing .body{flex:1;min-width:0}
   .admin-listing .body b{color:var(--white);font-size:11.5px;display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .admin-listing .body small{color:var(--muted);font-size:10px}
-  .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:10px}
+  .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:10px;align-items:center}
   .admin-msg .hdr b{color:var(--gold)}
   .admin-msg .txt{color:var(--text);font-size:11px;line-height:1.5;word-break:break-word;margin-bottom:6px}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
@@ -265,7 +318,9 @@
   .chat-header .thumb{width:40px;height:40px;border-radius:9px;background:var(--panel2);overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
   .chat-header .thumb img{width:100%;height:100%;object-fit:cover}
   .chat-header .info{flex:1;min-width:0}
-  .chat-header .name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-header .name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .chat-header .name .uname{color:var(--white)}
+  .chat-header .name .tag{color:var(--muted);font-weight:500;font-size:10px}
   .chat-header .sub{font-size:10px;color:var(--muted);margin-top:2px}
   .chat-header .actions{display:flex;gap:6px;width:100%}
   .chat-header .actions button{flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--line2);
@@ -279,8 +334,11 @@
   .msg.admin{align-self:flex-start;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-bottom-left-radius:4px}
   .msg.system{align-self:center;background:rgba(212,175,55,0.1);color:var(--gold);
     border:1px dashed rgba(212,175,55,0.4);font-size:11px;text-align:center;max-width:88%;font-family:var(--mono)}
-  .msg .meta{font-size:9px;opacity:.6;margin-top:4px;letter-spacing:.5px}
-  .msg.buyer .meta{text-align:right}
+  .msg .meta{font-size:9px;opacity:.7;margin-top:5px;letter-spacing:.4px;display:flex;align-items:center;gap:5px}
+  .msg .meta .sender{font-weight:700}
+  .msg.buyer .meta{text-align:right;justify-content:flex-end}
+  .msg.buyer .meta .sender{color:rgba(0,0,0,0.7)}
+  .msg.admin .meta .sender{color:var(--gold)}
   .msg .msg-del-btn{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
     background:var(--red);color:#fff;border:2px solid var(--panel);font-size:12px;font-weight:900;line-height:1;
     cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,0.4);transition:all .15s}
@@ -304,7 +362,6 @@
     padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
   .msg-action-box .detail-row .k{color:var(--muted)}
   .msg-action-box .detail-row .v{color:var(--white);font-family:var(--mono);text-align:right;word-break:break-word}
-  /* ============ NEW: Accept / Cancel buttons ============ */
   .msg-action-box .btn-row{display:flex;gap:8px;margin-top:12px}
   .msg-action-box .btn-row button{flex:1;padding:11px;border-radius:10px;border:none;
     font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
@@ -312,7 +369,6 @@
   .msg-action-box .btn-row .accept{background:linear-gradient(180deg,var(--green),#00a844);color:#000}
   .msg-action-box .btn-row .cancel{background:transparent;color:var(--red);border:1.5px solid rgba(255,59,59,0.5)}
   .msg-action-box .btn-row button:active{transform:scale(.97)}
-  /* ====================================================== */
   .chat-input-row{display:flex;gap:8px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line);background:var(--panel);margin:0 -18px;padding-left:18px;padding-right:18px;align-items:center}
   .chat-input-row input{flex:1;background:var(--panel2);border:1.5px solid var(--line);
@@ -364,6 +420,7 @@
   <div class="splash-text">Loading...</div>
 </div>
 
+<!-- ============ UNIFIED AUTH SCREEN ============ -->
 <div id="authScreen">
   <div class="auth-card">
     <div class="auth-logo">
@@ -372,22 +429,29 @@
       <div class="divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
       <p>Cash on Delivery Market</p>
     </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-auth="login">Login</button>
-      <button class="auth-tab" data-auth="signup">Sign Up</button>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="authUser" placeholder="choose your unique name" autocomplete="off" spellcheck="false" maxlength="20">
     </div>
-    <div id="loginForm">
-      <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="your username" autocomplete="off" spellcheck="false"></div>
-      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
-      <button class="btn" id="loginBtn">Sign In</button>
-      <div class="auth-err" id="loginErr"></div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="authPass" placeholder="min 6 characters" autocomplete="off">
+        <button type="button" class="pass-toggle" id="passToggle" aria-label="Toggle password">
+          <svg id="eyeOpen" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eyeClosed" viewBox="0 0 24 24" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
-    <div id="signupForm" style="display:none">
-      <div class="field"><label>Username</label><input type="text" id="signupUser" placeholder="choose username" autocomplete="off" spellcheck="false"></div>
-      <div class="field"><label>Password</label><input type="password" id="signupPass" placeholder="min 6 characters"></div>
-      <div class="field"><label>Confirm Password</label><input type="password" id="signupPass2" placeholder="repeat password"></div>
-      <button class="btn gold" id="signupBtn">Create Account</button>
-      <div class="auth-err" id="signupErr"></div>
+
+    <button class="btn gold" id="authSubmitBtn">Enter</button>
+    <div class="auth-result" id="authResult"></div>
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-hint">
+      <b>NEW?</b> Pick a unique name & password to create your account.<br>
+      <b>RETURNING?</b> Enter the same name & password to enter.
     </div>
   </div>
 </div>
@@ -412,7 +476,6 @@
       <button class="tab" data-view="pubchat">🌐 Public Chat</button>
       <button class="tab" data-view="admin" id="adminTabBtn" style="display:none">⚙️ Admin</button>
     </div>
-    <!-- ============ NOTICE BOARD (NEW) ============ -->
     <div class="notice-board hidden" id="noticeBoard">
       <div class="notice-head">📢 NOTICE BOARD</div>
       <div class="notice-body" id="noticeBody"></div>
@@ -461,7 +524,6 @@
     </div>
 
     <div class="view" id="view-admin">
-      <!-- ============ NOTICE BOARD ADMIN (NEW) ============ -->
       <div class="admin-section">
         <h3><span class="left">Notice Board</span></h3>
         <div class="field"><label>New Notice</label><textarea id="noticeInput" rows="2" placeholder="Type notice for all users..." maxlength="500"></textarea></div>
@@ -474,7 +536,6 @@
           Board visibility: <span id="noticeBoardStatus">—</span>
         </div>
       </div>
-      <!-- =============================================== -->
 
       <div class="admin-section">
         <h3><span class="left">Add Listing</span></h3>
@@ -599,11 +660,19 @@ let listChannel = null;
 let pubChannel = null;
 let orderChannel = null;
 let noticeChannel = null;
+let profileChannel = null;
 let unreadCount = 0;
 let pubPollTimer = null;
+let heartbeatTimer = null;
+let statusRefreshTimer = null;
+
+/* NEW: profiles cache for username / online-status display */
+let PROFILES = {}; // id -> { id, username, role, last_seen }
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
+
+const ONLINE_THRESHOLD_MS = 60 * 1000; // 60s = online
 
 /* ============================================================
    HELPERS
@@ -626,6 +695,30 @@ function timeAgo(iso) {
   if (s < 86400) return Math.floor(s/3600) + 'h ago';
   return d.toLocaleDateString();
 }
+function isOnline(lastSeen) {
+  if (!lastSeen) return false;
+  return (Date.now() - new Date(lastSeen).getTime()) < ONLINE_THRESHOLD_MS;
+}
+function formatPresence(lastSeen, isSelf) {
+  if (isSelf) return 'You · Online';
+  if (isOnline(lastSeen)) return 'Online';
+  if (!lastSeen) return 'Offline';
+  const d = new Date(lastSeen);
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return 'Online';
+  if (s < 3600) return `Last seen ${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `Last seen ${Math.floor(s/3600)}h ago`;
+  return `Last seen ${d.toLocaleDateString()}`;
+}
+function getProfile(id) {
+  return PROFILES[id] || { id, username: 'Unknown', role: 'user', last_seen: null };
+}
+function findAnyAdmin() {
+  for (const id in PROFILES) {
+    if (PROFILES[id].role === 'admin') return PROFILES[id];
+  }
+  return null;
+}
 function openModal(id) { $(id).classList.add('active'); }
 function closeModal(id) { $(id).classList.remove('active'); }
 document.querySelectorAll('[data-close]').forEach(b => {
@@ -636,54 +729,170 @@ document.querySelectorAll('.modal').forEach(m => {
 });
 
 /* ============================================================
-   AUTH
+   UNIFIED AUTH
    ============================================================ */
 function usernameToEmail(u) { return u.toLowerCase().trim() + '@bonecastle.local'; }
-document.querySelectorAll('.auth-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    const mode = tab.dataset.auth;
-    $('loginForm').style.display = mode === 'login' ? 'block' : 'none';
-    $('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
-  });
+
+$('passToggle').addEventListener('click', () => {
+  const inp = $('authPass');
+  const isPwd = inp.type === 'password';
+  inp.type = isPwd ? 'text' : 'password';
+  $('eyeOpen').style.display = isPwd ? 'none' : 'block';
+  $('eyeClosed').style.display = isPwd ? 'block' : 'none';
 });
-$('signupBtn').addEventListener('click', async () => {
-  const u = $('signupUser').value.trim();
-  const p = $('signupPass').value;
-  const p2 = $('signupPass2').value;
-  const err = $('signupErr'); err.textContent = '';
-  if (!/^[a-zA-Z0-9_]{3,20}$/.test(u)) { err.textContent = 'Username: 3-20 chars, letters/numbers/underscore only'; return; }
-  if (p.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
-  if (p !== p2) { err.textContent = 'Passwords do not match'; return; }
-  $('signupBtn').disabled = true; $('signupBtn').textContent = 'CREATING...';
+
+$('authUser').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('authPass').focus();
+});
+$('authPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleAuthSubmit();
+});
+$('authSubmitBtn').addEventListener('click', handleAuthSubmit);
+
+function showAuthResult(text, type) {
+  const el = $('authResult');
+  el.textContent = text;
+  el.className = 'auth-result show ' + type;
+}
+function hideAuthResult() {
+  const el = $('authResult');
+  el.className = 'auth-result';
+  el.textContent = '';
+}
+
+async function handleAuthSubmit() {
+  const u = $('authUser').value.trim();
+  const p = $('authPass').value;
+  const err = $('authErr');
+  err.textContent = '';
+  hideAuthResult();
+
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(u)) {
+    err.textContent = 'Username: 3-20 chars, letters/numbers/underscore only';
+    return;
+  }
+  if (p.length < 6) {
+    err.textContent = 'Password must be at least 6 characters';
+    return;
+  }
+
+  const btn = $('authSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'CHECKING...';
+  const resetBtn = () => { btn.disabled = false; btn.textContent = 'Enter'; };
+
   try {
-    const { data, error } = await sb.auth.signUp({ email: usernameToEmail(u), password: p, options: { data: { username: u } } });
-    if (error) { err.textContent = error.message; return; }
-    if (data.user && !data.session) {
-      const r = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password: p });
-      if (r.error) { err.textContent = r.error.message; return; }
+    // 1) Try to sign in as existing user
+    const { error: signinErr } = await sb.auth.signInWithPassword({
+      email: usernameToEmail(u),
+      password: p
+    });
+
+    if (!signinErr) {
+      resetBtn();
+      toast('Welcome back', 'ok');
+      return;
     }
+
+    // 2) Sign-in failed → check if username is available
+    btn.textContent = 'VERIFYING...';
+    const { data: available, error: rpcErr } = await sb.rpc('check_username_available', { uname: u });
+
+    if (rpcErr) {
+      err.textContent = 'Could not verify username. Try again.';
+      resetBtn();
+      return;
+    }
+
+    // 2a) Username already taken → wrong password
+    if (available === false) {
+      showAuthResult('✕ Username "' + u + '" is already taken. Try another name.', 'unavailable');
+      resetBtn();
+      return;
+    }
+
+    // 3) Username available → create account
+    btn.textContent = 'CREATING...';
+    const { data, error: signupErr } = await sb.auth.signUp({
+      email: usernameToEmail(u),
+      password: p,
+      options: { data: { username: u } }
+    });
+
+    if (signupErr) {
+      err.textContent = signupErr.message;
+      resetBtn();
+      return;
+    }
+
+    if (data.user && !data.session) {
+      const r = await sb.auth.signInWithPassword({
+        email: usernameToEmail(u),
+        password: p
+      });
+      if (r.error) {
+        err.textContent = r.error.message;
+        resetBtn();
+        return;
+      }
+    }
+
+    resetBtn();
     toast('Welcome to BONECASTLE', 'ok');
-  } catch (e) { err.textContent = e.message; }
-  finally { $('signupBtn').disabled = false; $('signupBtn').textContent = 'Create Account'; }
-});
-$('loginBtn').addEventListener('click', async () => {
-  const u = $('loginUser').value.trim();
-  const p = $('loginPass').value;
-  const err = $('loginErr'); err.textContent = '';
-  if (!u || !p) { err.textContent = 'Enter username and password'; return; }
-  $('loginBtn').disabled = true; $('loginBtn').textContent = 'SIGNING IN...';
-  const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password: p });
-  $('loginBtn').disabled = false; $('loginBtn').textContent = 'Sign In';
-  if (error) { err.textContent = 'Invalid username or password'; return; }
-});
+  } catch (e) {
+    err.textContent = e.message || 'Something went wrong';
+    resetBtn();
+  }
+}
+
 $('logoutBtn').addEventListener('click', async () => {
   if (pubPollTimer) clearInterval(pubPollTimer);
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  if (statusRefreshTimer) clearInterval(statusRefreshTimer);
   await sb.auth.signOut(); location.reload();
 });
-$('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
-$('signupPass2').addEventListener('keydown', e => { if (e.key === 'Enter') $('signupBtn').click(); });
+
+/* ============================================================
+   HEARTBEAT (update own last_seen)
+   ============================================================ */
+async function pulseLastSeen() {
+  try { await sb.rpc('touch_last_seen'); } catch (e) { /* silent */ }
+}
+function startHeartbeat() {
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  pulseLastSeen();
+  heartbeatTimer = setInterval(pulseLastSeen, 30000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && ME.id) pulseLastSeen();
+});
+window.addEventListener('focus', () => { if (ME.id) pulseLastSeen(); });
+
+/* ============================================================
+   PROFILES CACHE
+   ============================================================ */
+async function loadProfilesCache() {
+  const { data, error } = await sb.from('profiles').select('id, username, role, last_seen, is_banned');
+  if (error) { console.warn('Profiles load error:', error); return; }
+  PROFILES = {};
+  (data || []).forEach(p => PROFILES[p.id] = p);
+  // Update own entry as well (in case server value hasn't caught up)
+  if (ME.id && PROFILES[ME.id]) {
+    ME.username = PROFILES[ME.id].username;
+    ME.role = PROFILES[ME.id].role;
+  }
+}
+function startStatusRefresh() {
+  if (statusRefreshTimer) clearInterval(statusRefreshTimer);
+  statusRefreshTimer = setInterval(() => {
+    loadProfilesCache().then(() => {
+      // Refresh visible UI status displays
+      if ($('view-chats').classList.contains('active')) loadChats();
+      if ($('chatsModalOpen') || ACTIVE_CHAT) refreshChatHeaderPresence();
+      if (ME.role === 'admin' && $('adminUsers') && $('adminUsers').style.display !== 'none') loadAdminUsers();
+    });
+  }, 30000);
+}
 
 /* ============================================================
    SESSION
@@ -707,21 +916,34 @@ sb.auth.onAuthStateChange(async (event, session) => {
       $('userDisplay').textContent = ME.username;
       $('authScreen').classList.remove('on');
       $('appScreen').classList.add('on');
+
+      $('authErr').textContent = '';
+      $('authUser').value = '';
+      $('authPass').value = '';
+      hideAuthResult();
+
+      await pulseLastSeen();
+      await loadProfilesCache();
+
       await loadSettings();
       await loadListings();
       await loadChats();
       await loadOrders();
       await loadPublicChat();
-      await loadNotices();          /* NEW */
-      updateNoticeBoardAdminUI();   /* NEW */
+      await loadNotices();
+      updateNoticeBoardAdminUI();
       if (ME.role === 'admin') await loadAdminData();
       setupRealtime();
       startPublicChatPolling();
+      startHeartbeat();
+      startStatusRefresh();
     } catch (e) { console.error(e); toast('Session error: ' + e.message, 'err'); }
   } else {
     $('authScreen').classList.add('on');
     $('appScreen').classList.remove('on');
     if (pubPollTimer) clearInterval(pubPollTimer);
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (statusRefreshTimer) clearInterval(statusRefreshTimer);
   }
 });
 
@@ -733,7 +955,7 @@ async function loadSettings() {
   SETTINGS = {};
   (data || []).forEach(s => SETTINGS[s.key] = s.value);
   updateChatStatusUI();
-  updateNoticeBoardAdminUI(); /* NEW */
+  updateNoticeBoardAdminUI();
 }
 function updateChatStatusUI() {
   const enabled = SETTINGS.public_chat_enabled === 'true';
@@ -884,6 +1106,16 @@ async function startOrder(listing) {
 /* ============================================================
    CHATS
    ============================================================ */
+function otherPartyForChat(c) {
+  // For admin → other is buyer. For buyer → other is admin (any admin).
+  if (ME.role === 'admin') {
+    return getProfile(c.buyer_id);
+  }
+  // Buyer: find any admin. If the buyer themselves IS admin (unlikely), fall back.
+  const admin = findAnyAdmin();
+  return admin || { id: null, username: 'Admin', role: 'admin', last_seen: null };
+}
+
 async function loadChats() {
   const { data, error } = await sb.from('chats')
     .select('*, listings(title, images, price_usd, currency), messages(text, created_at, sender_role)')
@@ -896,10 +1128,21 @@ async function loadChats() {
     const listing = c.listings || {};
     const img = (listing.images && listing.images[0]) || '';
     const lastMsg = (c.messages && c.messages[0]) ? c.messages[0].text : 'New conversation';
+    const other = otherPartyForChat(c);
+    const online = isOnline(other.last_seen);
+    const otherName = ME.role === 'admin'
+      ? esc(other.username)
+      : esc(other.username === 'Admin' ? 'Admin' : other.username);
+    const tag = ME.role === 'admin'
+      ? `<span class="tag">· ${online ? 'online' : formatPresence(other.last_seen, false).toLowerCase()}</span>`
+      : `<span class="tag">· seller</span>`;
     return `<div class="chat-item" data-chat="${c.id}">
       <div class="chat-thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
       <div class="chat-meta">
-        <div class="title">${esc(listing.title || 'Listing')}</div>
+        <div class="title">
+          <span class="online-dot-sm ${online ? 'online' : ''}"></span>
+          <span class="uname">${otherName}</span>${tag}
+        </div>
         <div class="preview">${esc(lastMsg.slice(0, 60))}</div>
         <div class="time">${timeAgo(c.last_message_at)}</div>
       </div>
@@ -916,8 +1159,6 @@ async function loadChats() {
 async function openChat(chatId, listing) {
   ACTIVE_CHAT = chatId;
   ACTIVE_CHAT_LISTING = listing;
-  $('chatName').textContent = listing?.title || 'Chat';
-  $('chatSub').textContent = ME.role === 'admin' ? 'Buyer conversation' : 'Seller (Admin)';
   const img = (listing?.images && listing.images[0]) || '';
   $('chatThumb').innerHTML = img ? `<img src="${esc(img)}" alt="">` : '';
 
@@ -930,10 +1171,40 @@ async function openChat(chatId, listing) {
   if (ACTIVE_ORDER && !ACTIVE_ORDER.details_status) ACTIVE_ORDER.details_status = 'none';
   if (ACTIVE_ORDER && !ACTIVE_ORDER.buyer_confirmation) ACTIVE_ORDER.buyer_confirmation = 'none';
 
+  // Store partner info for header
+  ACTIVE_CHAT_PARTNER_ID = ME.role === 'admin'
+    ? (ACTIVE_ORDER?.buyer_id || null)
+    : null;
+
+  refreshChatHeaderPresence();
   renderChatActions();
   await loadMessages();
   openModal('chatModal');
   setTimeout(() => $('chatInput').focus(), 300);
+}
+
+let ACTIVE_CHAT_PARTNER_ID = null;
+
+function refreshChatHeaderPresence() {
+  const listing = ACTIVE_CHAT_LISTING;
+  const titleBase = listing?.title || 'Chat';
+  let partner = null;
+  if (ME.role === 'admin' && ACTIVE_CHAT_PARTNER_ID) {
+    partner = getProfile(ACTIVE_CHAT_PARTNER_ID);
+  } else if (ME.role !== 'admin') {
+    partner = findAnyAdmin();
+  }
+
+  const online = partner ? isOnline(partner.last_seen) : false;
+  const pname = partner ? partner.username : (ME.role === 'admin' ? 'Buyer' : 'Admin');
+
+  $('chatName').innerHTML = `
+    <span class="online-dot-md ${online ? 'online' : ''}"></span>
+    <span class="uname">${esc(pname)}</span>
+    <span class="tag">· ${ME.role === 'admin' ? 'buyer' : 'seller'}</span>
+  `;
+  const presenceText = partner ? formatPresence(partner.last_seen, false) : '—';
+  $('chatSub').textContent = `${titleBase} — ${presenceText}`;
 }
 
 /* ============================================================
@@ -1062,7 +1333,7 @@ function openAdminDetailsForm() {
 
     const { error } = await sb.from('orders').update({
       admin_location: loc, admin_time: time, details_status: 'confirmed',
-      buyer_confirmation: 'none'  /* NEW: reset buyer decision when admin confirms */
+      buyer_confirmation: 'none'
     }).eq('id', ACTIVE_ORDER.id);
 
     if (error) { $('aErr').textContent = error.message; $('aSubmit').disabled = false; $('aSubmit').textContent = 'Confirm & Send to Buyer'; return; }
@@ -1075,7 +1346,7 @@ function openAdminDetailsForm() {
     ACTIVE_ORDER.admin_location = loc;
     ACTIVE_ORDER.admin_time = time;
     ACTIVE_ORDER.details_status = 'confirmed';
-    ACTIVE_ORDER.buyer_confirmation = 'none';  /* NEW */
+    ACTIVE_ORDER.buyer_confirmation = 'none';
     closeModal('formModal');
     toast('Delivery details sent to buyer', 'ok');
     loadMessages();
@@ -1087,27 +1358,22 @@ function openAdminDetailsForm() {
 window.openUserDetailsForm = openUserDetailsForm;
 
 /* ============================================================
-   NEW: BUYER ACCEPT / CANCEL ORDER
+   BUYER ACCEPT / CANCEL
    ============================================================ */
 async function buyerAcceptOrder() {
   if (!ACTIVE_ORDER || !ACTIVE_CHAT) return;
   if (!confirm('Accept this order? Admin will be notified.')) return;
 
-  const { error } = await sb.from('orders').update({
-    buyer_confirmation: 'accepted'
-  }).eq('id', ACTIVE_ORDER.id);
-
+  const { error } = await sb.from('orders').update({ buyer_confirmation: 'accepted' }).eq('id', ACTIVE_ORDER.id);
   if (error) { toast(error.message, 'err'); return; }
 
   await sb.from('messages').insert({
     chat_id: ACTIVE_CHAT, sender_id: ME.id, sender_role: 'buyer',
     text: 'Buyer accepted the order', message_type: 'buyer_accepted'
   });
-
   ACTIVE_ORDER.buyer_confirmation = 'accepted';
   toast('Order accepted ✓', 'ok');
-  loadMessages();
-  loadOrders();
+  loadMessages(); loadOrders();
 }
 
 async function buyerCancelOrder() {
@@ -1118,19 +1384,16 @@ async function buyerCancelOrder() {
     buyer_confirmation: 'cancelled',
     delivery_status: 'cancelled'
   }).eq('id', ACTIVE_ORDER.id);
-
   if (error) { toast(error.message, 'err'); return; }
 
   await sb.from('messages').insert({
     chat_id: ACTIVE_CHAT, sender_id: ME.id, sender_role: 'buyer',
     text: 'Buyer cancelled the order', message_type: 'buyer_cancelled'
   });
-
   ACTIVE_ORDER.buyer_confirmation = 'cancelled';
   ACTIVE_ORDER.delivery_status = 'cancelled';
   toast('Order cancelled', 'warn');
-  loadMessages();
-  loadOrders();
+  loadMessages(); loadOrders();
 }
 window.buyerAcceptOrder = buyerAcceptOrder;
 window.buyerCancelOrder = buyerCancelOrder;
@@ -1149,7 +1412,6 @@ function renderMessages(msgs) {
   const box = $('chatMessages');
   if (!msgs.length) { box.innerHTML = '<div style="text-align:center;color:var(--dim);font-size:11px;padding:20px">No messages yet</div>'; return; }
 
-  /* NEW: find latest detail_confirmed to attach accept/cancel only on the newest */
   const lastConfirmed = [...msgs].reverse().find(m => m.message_type === 'detail_confirmed');
   const lastConfirmedId = lastConfirmed ? lastConfirmed.id : null;
   const buyerConf = (ACTIVE_ORDER && ACTIVE_ORDER.buyer_confirmation) ? ACTIVE_ORDER.buyer_confirmation : 'none';
@@ -1157,6 +1419,9 @@ function renderMessages(msgs) {
   box.innerHTML = msgs.map(m => {
     const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const delBtn = ME.role === 'admin' ? `<button class="msg-del-btn" data-msgdel="${m.id}" title="Delete">×</button>` : '';
+    // NEW: sender name from profiles cache
+    const senderProf = getProfile(m.sender_id);
+    const senderName = senderProf.username || (m.sender_role === 'admin' ? 'Admin' : 'Buyer');
 
     if (m.message_type === 'detail_request') {
       if (ME.role === 'admin') {
@@ -1235,10 +1500,11 @@ function renderMessages(msgs) {
       return `<div class="msg system" style="background:rgba(255,59,59,0.1);color:var(--red);border-color:rgba(255,59,59,0.4)">✕ You cancelled the order<div class="meta">${time}</div></div>`;
     }
 
+    // Regular text message — show sender name
     return `<div class="msg ${m.sender_role}">
       ${delBtn}
       ${esc(m.text).replace(/\n/g, '<br>')}
-      <div class="meta">${time}</div>
+      <div class="meta"><span class="sender">${esc(senderName)}</span> · ${time}</div>
     </div>`;
   }).join('');
 
@@ -1261,6 +1527,7 @@ async function sendMessage() {
   const text = $('chatInput').value.trim();
   if (!text || !ACTIVE_CHAT) return;
   $('chatInput').value = '';
+  await pulseLastSeen();
   await sb.from('messages').insert({
     chat_id: ACTIVE_CHAT, sender_id: ME.id,
     sender_role: ME.role === 'admin' ? 'admin' : 'buyer',
@@ -1288,16 +1555,27 @@ function renderOrderCard(o) {
   const cur = o.currency || listing.currency || 'LKR';
   const priceStr = fmtPrice(o.amount_usd, cur);
 
-  /* NEW: show buyer confirmation state */
   const bc = o.buyer_confirmation || 'none';
   const bcLabel = bc === 'accepted' ? '✅ You accepted'
                 : bc === 'cancelled' ? '❌ You cancelled' : '';
+
+  // NEW: seller / buyer name
+  let otherLabel, otherName;
+  if (ME.role === 'admin') {
+    otherLabel = 'Buyer';
+    otherName = getProfile(o.buyer_id).username;
+  } else {
+    otherLabel = 'Seller';
+    const admin = findAnyAdmin();
+    otherName = admin ? admin.username : 'Admin';
+  }
 
   return `<div class="order-card">
     <div class="order-header">
       <span class="order-id">#${o.id.slice(0,8)}</span>
       <span class="order-status status-${o.delivery_status || 'pending'}">${labels[o.delivery_status] || 'Pending'}</span>
     </div>
+    <div class="order-row"><span class="k">${otherLabel}</span><span class="v">${esc(otherName)}</span></div>
     <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
     <div class="order-row"><span class="k">Amount</span><span class="v">${esc(priceStr)} (COD)</span></div>
     <div class="order-row"><span class="k">Status</span><span class="v">${detailsLabel}</span></div>
@@ -1334,9 +1612,15 @@ function renderPublicChat(msgs) {
     const isMine = m.user_id === ME.id;
     const isAdmin = ME.role === 'admin';
     const delBtn = isAdmin ? `<button class="pub-del-btn" data-pubdel="${m.id}" title="Delete">×</button>` : '';
+    // NEW: online indicator for other users
+    const senderProf = PROFILES[m.user_id];
+    const online = senderProf ? isOnline(senderProf.last_seen) : false;
+    const presenceHtml = !isMine && senderProf
+      ? `<span class="online-dot-sm ${online ? 'online' : ''}" style="margin-right:4px"></span>`
+      : '';
     return `<div class="pubmsg ${isMine ? 'mine' : 'other'}">
       ${delBtn}
-      ${!isMine ? `<div class="meta"><span class="name">${esc(m.username)}</span></div>` : ''}
+      ${!isMine ? `<div class="meta">${presenceHtml}<span class="name">${esc(m.username)}</span></div>` : ''}
       <div>${esc(m.text).replace(/\n/g, '<br>')}</div>
       <div class="meta">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
@@ -1362,6 +1646,7 @@ async function sendPublicMsg() {
   if (!text) return;
   if (SETTINGS.public_chat_enabled !== 'true') { toast('Chat is shutdown', 'warn'); return; }
   $('pubchatInput').value = '';
+  await pulseLastSeen();
   const { error } = await sb.from('public_messages').insert({ user_id: ME.id, username: ME.username, text: text });
   if (error) { toast(error.message, 'err'); return; }
   loadPublicChat();
@@ -1375,7 +1660,7 @@ function startPublicChatPolling() {
 }
 
 /* ============================================================
-   NEW: NOTICE BOARD
+   NOTICE BOARD
    ============================================================ */
 async function loadNotices() {
   const board = $('noticeBoard');
@@ -1383,20 +1668,12 @@ async function loadNotices() {
   if (!board || !body) return;
 
   const visible = SETTINGS.notice_board_visible !== 'false';
-
-  if (!visible) {
-    board.classList.add('hidden');
-  } else {
-    board.classList.remove('hidden');
-  }
+  if (!visible) board.classList.add('hidden'); else board.classList.remove('hidden');
 
   const { data, error } = await sb.from('notices').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Notices load error:', error); return; }
 
-  if (!data || !data.length) {
-    body.innerHTML = '<div class="notice-empty">No notices</div>';
-    return;
-  }
+  if (!data || !data.length) { body.innerHTML = '<div class="notice-empty">No notices</div>'; return; }
 
   body.innerHTML = data.map(n => `<div class="notice-item">
     <div class="txt">${esc(n.text)}</div>
@@ -1425,7 +1702,6 @@ function updateNoticeBoardAdminUI() {
   }
 }
 
-/* Admin: add notice */
 $('addNoticeBtn').addEventListener('click', async () => {
   const text = $('noticeInput').value.trim();
   if (!text) { toast('Enter notice text', 'warn'); return; }
@@ -1437,7 +1713,6 @@ $('addNoticeBtn').addEventListener('click', async () => {
   loadNotices();
 });
 
-/* Admin: toggle visibility */
 $('noticeToggleBtn').addEventListener('click', async () => {
   if (ME.role !== 'admin') return;
   const visible = SETTINGS.notice_board_visible !== 'false';
@@ -1452,7 +1727,6 @@ $('noticeToggleBtn').addEventListener('click', async () => {
   updateNoticeBoardAdminUI();
 });
 
-/* Admin: clear all notices */
 $('noticeClearBtn').addEventListener('click', async () => {
   if (ME.role !== 'admin') return;
   if (!confirm('Delete ALL notices? Cannot be undone.')) return;
@@ -1564,6 +1838,7 @@ $('togglePubMsgs').addEventListener('click', () => {
 
 async function loadAdminData() {
   if (ME.role !== 'admin') return;
+  await loadProfilesCache();
   await Promise.all([loadAdminListings(), loadAdminOrders(), loadAdminUsers()]);
 }
 
@@ -1606,23 +1881,19 @@ async function loadAdminListings() {
 async function loadAdminOrders() {
   const { data: orders, error } = await sb.from('orders').select('*, listings(title, images, currency)').order('created_at', { ascending: false });
   if (error) { console.error('Admin orders error:', error); toast('Orders load failed: ' + error.message, 'err'); return; }
-  const buyerIds = [...new Set((orders||[]).map(o => o.buyer_id).filter(Boolean))];
-  const buyersMap = {};
-  if (buyerIds.length) {
-    const { data: buyers } = await sb.from('profiles').select('id, username').in('id', buyerIds);
-    (buyers||[]).forEach(b => buyersMap[b.id] = b.username);
-  }
+  await loadProfilesCache();
   $('orderCount').textContent = orders?.length || 0;
   $('adminOrders').innerHTML = (orders || []).map(o => {
     const listing = o.listings || {};
-    const buyerName = buyersMap[o.buyer_id] || 'Unknown';
+    const buyer = getProfile(o.buyer_id);
+    const buyerName = buyer.username || 'Unknown';
+    const buyerOnline = isOnline(buyer.last_seen);
     const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
     const dStatus = o.details_status || 'none';
     const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Delivery Confirmed' };
     const cur = o.currency || listing.currency || 'LKR';
     const priceStr = fmtPrice(o.amount_usd, cur);
 
-    /* NEW: buyer confirmation status */
     const bc = o.buyer_confirmation || 'none';
     let bcChip = '';
     if (bc === 'accepted') bcChip = '<span class="chip green">✅ BUYER ACCEPTED</span>';
@@ -1634,7 +1905,7 @@ async function loadAdminOrders() {
         <span class="chip ${dStatus === 'confirmed' ? 'green' : dStatus === 'user_submitted' ? 'gold' : 'red'}">${detailsLabels[dStatus] || 'Chatting'}</span>
       </div>
       <div class="info">
-        Buyer: <b>${esc(buyerName)}</b> ${bcChip ? '· ' + bcChip : ''} · ${esc(priceStr)} (COD)<br>
+        Buyer: <span class="online-dot-sm ${buyerOnline ? 'online' : ''}" style="vertical-align:middle"></span><b>${esc(buyerName)}</b> ${bcChip ? '· ' + bcChip : ''} · ${esc(priceStr)} (COD)<br>
         ${o.user_location ? `Buyer Loc: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
         ${o.admin_location ? `Delivery Loc: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
         Delivery: ${labels[o.delivery_status] || 'Pending'}
@@ -1690,17 +1961,29 @@ async function loadAdminOrders() {
 }
 
 async function loadAdminUsers() {
-  const { data: users, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
-  if (error) console.error('Users error:', error);
-  $('userCount').textContent = users?.length || 0;
-  $('adminUsers').innerHTML = (users || []).map(u => `<div class="user-item">
-      <div class="name"><span>${esc(u.username)} ${u.role === 'admin' ? '<span class="chip gold">ADMIN</span>' : ''} ${u.is_banned ? '<span class="chip red">BANNED</span>' : ''}</span></div>
-      <div class="meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
+  await loadProfilesCache();
+  const users = Object.values(PROFILES).sort((a,b) => {
+    // Online first, then by username
+    const ao = isOnline(a.last_seen), bo = isOnline(b.last_seen);
+    if (ao !== bo) return bo - ao;
+    return (a.username || '').localeCompare(b.username || '');
+  });
+  $('userCount').textContent = users.length;
+  $('adminUsers').innerHTML = users.map(u => {
+    const online = isOnline(u.last_seen);
+    const presence = online ? '<span class="chip green">● ONLINE</span>' : `<span class="chip">${formatPresence(u.last_seen, false).replace('Last seen ', 'Seen ')}</span>`;
+    return `<div class="user-item">
+      <div class="name">
+        <span><span class="online-dot-sm ${online ? 'online' : ''}"></span>${esc(u.username)} ${u.role === 'admin' ? '<span class="chip gold">ADMIN</span>' : ''} ${u.is_banned ? '<span class="chip red">BANNED</span>' : ''}</span>
+        <span>${presence}</span>
+      </div>
+      <div class="meta">Joined ${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</div>
       <div class="row" style="margin-top:8px">
         ${u.id !== ME.id ? `<button class="btn tiny ${u.is_banned ? 'ghost' : 'danger'}" data-uban="${u.id}" data-banned="${u.is_banned}">${u.is_banned ? 'UNBAN' : 'BAN'}</button>
         <button class="btn tiny danger" data-udelete="${u.id}">DELETE</button>` : '<span style="color:var(--gold);font-size:10px">YOU</span>'}
       </div>
-    </div>`).join('') || '<div style="color:var(--muted);font-size:11px">No users</div>';
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:11px">No users</div>';
   document.querySelectorAll('[data-uban]').forEach(b => {
     b.addEventListener('click', async () => {
       const currentlyBanned = b.dataset.banned === 'true';
@@ -1721,13 +2004,15 @@ async function loadAdminUsers() {
 
 async function loadAdminPubMsgs() {
   const { data } = await sb.from('public_messages').select('*').order('created_at', { ascending: false }).limit(200);
-  $('adminPubMsgs').innerHTML = (data || []).map(m => `
-    <div class="admin-msg">
-      <div class="hdr"><b>${esc(m.username)}</b><span>${timeAgo(m.created_at)}</span></div>
+  $('adminPubMsgs').innerHTML = (data || []).map(m => {
+    const prof = PROFILES[m.user_id];
+    const online = prof ? isOnline(prof.last_seen) : false;
+    return `<div class="admin-msg">
+      <div class="hdr"><b><span class="online-dot-sm ${online ? 'online' : ''}" style="vertical-align:middle"></span>${esc(m.username)}</b><span>${timeAgo(m.created_at)}</span></div>
       <div class="txt">${esc(m.text).replace(/\n/g, '<br>')}</div>
       <button class="btn tiny danger" data-pdel="${m.id}">DELETE</button>
-    </div>
-  `).join('') || '<div style="color:var(--muted);font-size:11px">No messages</div>';
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:11px">No messages</div>';
   document.querySelectorAll('[data-pdel]').forEach(b => {
     b.addEventListener('click', async () => {
       await sb.from('public_messages').delete().eq('id', b.dataset.pdel);
@@ -1741,7 +2026,7 @@ async function loadAdminPubMsgs() {
    REALTIME
    ============================================================ */
 function setupRealtime() {
-  [chatChannel, listChannel, pubChannel, orderChannel, noticeChannel].forEach(c => { if (c) sb.removeChannel(c); });
+  [chatChannel, listChannel, pubChannel, orderChannel, noticeChannel, profileChannel].forEach(c => { if (c) sb.removeChannel(c); });
 
   chatChannel = sb.channel('rt-messages-' + ME.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -1789,14 +2074,26 @@ function setupRealtime() {
       if (ME.role === 'admin' && $('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
-      loadSettings(); loadPublicChat(); loadNotices();  /* NEW: also reload notices on settings change */
+      loadSettings(); loadPublicChat(); loadNotices();
     })
     .subscribe();
 
-  /* NEW: Realtime notices channel */
   noticeChannel = sb.channel('rt-notices-' + ME.id)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => {
       loadNotices();
+    })
+    .subscribe();
+
+  /* NEW: Realtime profiles (online status changes) */
+  profileChannel = sb.channel('rt-profiles-' + ME.id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
+      const u = payload.new;
+      if (u && u.id) {
+        PROFILES[u.id] = { ...(PROFILES[u.id] || {}), ...u };
+        // Update live UI components
+        if ($('view-chats').classList.contains('active')) loadChats();
+        if (ACTIVE_CHAT) refreshChatHeaderPresence();
+      }
     })
     .subscribe();
 }
