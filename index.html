@@ -422,7 +422,8 @@
         <h3><span class="left">Add Listing</span></h3>
         <div class="field"><label>Title</label><input type="text" id="alTitle" maxlength="80" placeholder="Product name"></div>
         <div class="field"><label>Description</label><textarea id="alDesc" rows="4" placeholder="Describe your product..."></textarea></div>
-        <div class="field"><label>Price (USD)</label><input type="number" id="alPrice" step="0.01" min="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Price</label><input type="number" id="alPrice" step="0.01" min="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Currency</label><select id="alCurrency"><option value="LKR" selected>Rs. (LKR - Sri Lankan Rupee)</option><option value="USD">$ (USD - US Dollar)</option></select></div>
         <div class="field"><label>Category</label><input type="text" id="alCat" placeholder="general"></div>
         <div class="field"><label>Images (max 4)</label><input type="file" id="alImages" accept="image/*" multiple><div class="img-preview" id="imgPreview"></div></div>
         <button class="btn gold" id="addListingBtn">Publish Listing</button>
@@ -508,6 +509,22 @@ const LOGO_URL = 'https://files.catbox.moe/8iv6s9.jpg';
 
 function applyLogo() {
   document.querySelectorAll('.logo-img').forEach(img => { img.src = LOGO_URL; });
+}
+
+/* ============================================================
+   CURRENCY FORMATTER
+   ============================================================ */
+function fmtPrice(amount, currency) {
+  const cur = (currency || 'LKR').toUpperCase();
+  const n = parseFloat(amount || 0);
+  if (isNaN(n)) return '—';
+  if (cur === 'LKR') {
+    return 'Rs. ' + n.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (cur === 'USD') {
+    return '$' + n.toFixed(2);
+  }
+  return cur + ' ' + n.toFixed(2);
 }
 
 /* ============================================================
@@ -700,11 +717,12 @@ async function loadListings() {
   $('marketEmpty').style.display = 'none';
   grid.innerHTML = data.map((l, i) => {
     const img = (l.images && l.images[0]) ? l.images[0] : '';
+    const priceStr = fmtPrice(l.price_usd, l.currency);
     return `<div class="listing-card" data-id="${l.id}" style="animation-delay:${i * 0.05}s">
       <div class="listing-img">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="no-img">NO IMAGE</span>'}</div>
       <div class="listing-info">
         <div class="listing-title">${esc(l.title)}</div>
-        <div class="listing-price">$${parseFloat(l.price_usd).toFixed(2)}</div>
+        <div class="listing-price">${esc(priceStr)}</div>
       </div>
     </div>`;
   }).join('');
@@ -720,10 +738,11 @@ function openListingDetail(listing) {
   if (!listing) return;
   ACTIVE_LISTING = listing;
   const imgs = (listing.images && listing.images.length) ? listing.images : [];
+  const priceStr = fmtPrice(listing.price_usd, listing.currency);
   $('detailBody').innerHTML = `
     ${imgs.length ? `<div class="detail-imgs">${imgs.map(i => `<img src="${esc(i)}" alt="">`).join('')}</div>` : ''}
     <div class="detail-title">${esc(listing.title)}</div>
-    <div class="detail-price">$${parseFloat(listing.price_usd).toFixed(2)}</div>
+    <div class="detail-price">${esc(priceStr)}</div>
     <div class="detail-desc">${esc(listing.description)}</div>
     <div class="cod-info">
       <b>💵 Cash on Delivery</b><br>
@@ -743,16 +762,19 @@ async function ensureOrderExists(chatId, listing, silent) {
   const { data: existingOrder } = await sb.from('orders').select('id').eq('chat_id', chatId).maybeSingle();
   if (existingOrder) return existingOrder;
 
+  const cur = listing.currency || 'LKR';
+
   let { data: newOrder, error: err1 } = await sb.from('orders').insert({
     listing_id: listing.id, buyer_id: ME.id, chat_id: chatId,
-    amount_usd: listing.price_usd, payment_method: 'COD',
+    amount_usd: listing.price_usd, currency: cur, payment_method: 'COD',
     delivery_status: 'pending', details_status: 'none'
   }).select().single();
 
   if (err1) {
     console.warn('Full order insert failed:', err1);
     const { data: minOrder, error: err2 } = await sb.from('orders').insert({
-      listing_id: listing.id, buyer_id: ME.id, chat_id: chatId, amount_usd: listing.price_usd
+      listing_id: listing.id, buyer_id: ME.id, chat_id: chatId,
+      amount_usd: listing.price_usd, currency: cur
     }).select().single();
     if (err2) {
       console.error('Minimal order insert failed:', err2);
@@ -781,9 +803,10 @@ async function startOrder(listing) {
   const order = await ensureOrderExists(chat.id, listing, false);
 
   if (isNewOrder && order) {
+    const priceStr = fmtPrice(listing.price_usd, listing.currency);
     await sb.from('messages').insert({
       chat_id: chat.id, sender_id: ME.id, sender_role: 'buyer',
-      text: `Hello! I'm interested in "${listing.title}" ($${listing.price_usd}). Can we discuss the details?`,
+      text: `Hello! I'm interested in "${listing.title}" (${priceStr}). Can we discuss the details?`,
       message_type: 'text'
     });
   }
@@ -801,7 +824,7 @@ async function startOrder(listing) {
    ============================================================ */
 async function loadChats() {
   const { data, error } = await sb.from('chats')
-    .select('*, listings(title, images, price_usd), messages(text, created_at, sender_role)')
+    .select('*, listings(title, images, price_usd, currency), messages(text, created_at, sender_role)')
     .order('last_message_at', { ascending: false });
   if (error) { toast(error.message, 'err'); return; }
   const wrap = $('chatsList');
@@ -879,7 +902,6 @@ function renderChatActions() {
     span.textContent = '⏳ Waiting for buyer...';
     box.appendChild(span);
   } else if (status === 'user_submitted') {
-    /* NEW BUTTON: Enter Delivery Details */
     const btn = document.createElement('button');
     btn.className = 'gold';
     btn.textContent = '📦 Enter Delivery Details';
@@ -893,9 +915,6 @@ function renderChatActions() {
   }
 }
 
-/* ============================================================
-   ADMIN: Ask for details
-   ============================================================ */
 async function askForDetails() {
   if (!ACTIVE_ORDER || ME.role !== 'admin') return;
   if (!confirm('Ask the buyer to enter location & time?')) return;
@@ -914,9 +933,6 @@ async function askForDetails() {
   renderChatActions();
 }
 
-/* ============================================================
-   USER: Enter Order Details
-   ============================================================ */
 function openUserDetailsForm() {
   if (!ACTIVE_ORDER) { toast('No order found', 'err'); return; }
   $('formModalTitle').textContent = 'Enter Order Details';
@@ -957,9 +973,6 @@ function openUserDetailsForm() {
   openModal('formModal');
 }
 
-/* ============================================================
-   ADMIN: Enter Delivery Details (NEW)
-   ============================================================ */
 function openAdminDetailsForm() {
   if (!ACTIVE_ORDER) return;
   $('formModalTitle').textContent = 'Enter Delivery Details';
@@ -1026,7 +1039,6 @@ function renderMessages(msgs) {
     const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const delBtn = ME.role === 'admin' ? `<button class="msg-del-btn" data-msgdel="${m.id}" title="Delete">×</button>` : '';
 
-    /* 1. Admin asked buyer for details */
     if (m.message_type === 'detail_request') {
       if (ME.role === 'admin') {
         return `<div class="msg system">📝 Asked buyer for delivery details<div class="meta">${time}</div></div>`;
@@ -1038,7 +1050,6 @@ function renderMessages(msgs) {
       </div>`;
     }
 
-    /* 2. Buyer submitted details — shown to admin */
     if (m.message_type === 'detail_submitted') {
       if (ME.role === 'admin') {
         return `<div class="msg-action-box">
@@ -1054,7 +1065,6 @@ function renderMessages(msgs) {
       </div>`;
     }
 
-    /* 3. Admin sent final delivery details — shown to buyer & admin */
     if (m.message_type === 'detail_confirmed') {
       return `<div class="msg-action-box details-shown">
         <div class="title">📦 Delivery Details Confirmed</div>
@@ -1102,7 +1112,7 @@ async function sendMessage() {
    ORDERS
    ============================================================ */
 async function loadOrders() {
-  const { data, error } = await sb.from('orders').select('*, listings(title, images)').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('orders').select('*, listings(title, images, currency)').order('created_at', { ascending: false });
   if (error) { console.error('Orders load error:', error); }
   const wrap = $('ordersList');
   if (!data || !data.length) { wrap.innerHTML = ''; $('ordersEmpty').style.display = 'block'; return; }
@@ -1114,13 +1124,15 @@ function renderOrderCard(o) {
   const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
   const dStatus = o.details_status || 'none';
   const detailsLabel = { none: 'Chatting', requested: 'Details Requested', user_submitted: 'Details Submitted', confirmed: 'Delivery Confirmed' }[dStatus] || 'Chatting';
+  const cur = o.currency || listing.currency || 'LKR';
+  const priceStr = fmtPrice(o.amount_usd, cur);
   return `<div class="order-card">
     <div class="order-header">
       <span class="order-id">#${o.id.slice(0,8)}</span>
       <span class="order-status status-${o.delivery_status || 'pending'}">${labels[o.delivery_status] || 'Pending'}</span>
     </div>
     <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
-    <div class="order-row"><span class="k">Amount</span><span class="v">$${parseFloat(o.amount_usd || 0).toFixed(2)} (COD)</span></div>
+    <div class="order-row"><span class="k">Amount</span><span class="v">${esc(priceStr)} (COD)</span></div>
     <div class="order-row"><span class="k">Status</span><span class="v">${detailsLabel}</span></div>
     ${o.admin_location ? `<div class="order-row"><span class="k">Delivery Location</span><span class="v">${esc(o.admin_location)}</span></div>` : ''}
     ${o.admin_time ? `<div class="order-row"><span class="k">Delivery Time</span><span class="v">${esc(o.admin_time)}</span></div>` : ''}
@@ -1201,6 +1213,7 @@ $('addListingBtn').addEventListener('click', async () => {
   const title = $('alTitle').value.trim();
   const desc = $('alDesc').value.trim();
   const price = parseFloat($('alPrice').value);
+  const currency = $('alCurrency').value || 'LKR';
   const cat = $('alCat').value.trim() || 'general';
   const files = $('alImages').files;
   const err = $('alErr'); err.textContent = '';
@@ -1217,7 +1230,9 @@ $('addListingBtn').addEventListener('click', async () => {
       images.push(pub.publicUrl);
     }
   }
-  const { error } = await sb.from('listings').insert({ title, description: desc, price_usd: price, category: cat, images });
+  const { error } = await sb.from('listings').insert({
+    title, description: desc, price_usd: price, currency, category: cat, images
+  });
   $('addListingBtn').disabled = false; $('addListingBtn').textContent = 'Publish Listing';
   if (error) { err.textContent = error.message; return; }
   toast('Listing published', 'ok');
@@ -1302,9 +1317,10 @@ async function loadAdminListings() {
   $('listingCount').textContent = listings?.length || 0;
   $('adminListings').innerHTML = (listings || []).map(l => {
     const img = (l.images && l.images[0]) || '';
+    const priceStr = fmtPrice(l.price_usd, l.currency);
     return `<div class="admin-listing">
       <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
-      <div class="body"><b>${esc(l.title)}</b><small>$${parseFloat(l.price_usd).toFixed(2)} · ${l.status}</small></div>
+      <div class="body"><b>${esc(l.title)}</b><small>${esc(priceStr)} · ${l.status}</small></div>
       <div class="row">
         <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? 'HIDE' : 'SHOW'}</button>
         <button class="btn tiny danger" data-ldelete="${l.id}">DEL</button>
@@ -1332,7 +1348,7 @@ async function loadAdminListings() {
 }
 
 async function loadAdminOrders() {
-  const { data: orders, error } = await sb.from('orders').select('*, listings(title, images)').order('created_at', { ascending: false });
+  const { data: orders, error } = await sb.from('orders').select('*, listings(title, images, currency)').order('created_at', { ascending: false });
   if (error) { console.error('Admin orders error:', error); toast('Orders load failed: ' + error.message, 'err'); return; }
   const buyerIds = [...new Set((orders||[]).map(o => o.buyer_id).filter(Boolean))];
   const buyersMap = {};
@@ -1347,13 +1363,15 @@ async function loadAdminOrders() {
     const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
     const dStatus = o.details_status || 'none';
     const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Delivery Confirmed' };
+    const cur = o.currency || listing.currency || 'LKR';
+    const priceStr = fmtPrice(o.amount_usd, cur);
     return `<div class="admin-order">
       <div class="hdr">
         <b>#${o.id.slice(0,8)} · ${esc(listing.title || 'Deleted')}</b>
         <span class="chip ${dStatus === 'confirmed' ? 'green' : dStatus === 'user_submitted' ? 'gold' : 'red'}">${detailsLabels[dStatus] || 'Chatting'}</span>
       </div>
       <div class="info">
-        Buyer: <b>${esc(buyerName)}</b> · $${parseFloat(o.amount_usd).toFixed(2)} (COD)<br>
+        Buyer: <b>${esc(buyerName)}</b> · ${esc(priceStr)} (COD)<br>
         ${o.user_location ? `Buyer Loc: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
         ${o.admin_location ? `Delivery Loc: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
         Delivery: ${labels[o.delivery_status] || 'Pending'}
