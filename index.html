@@ -115,6 +115,35 @@
     cursor:pointer;text-transform:uppercase;font-family:inherit;transition:all .25s;white-space:nowrap}
   .tab.active{background:var(--white);color:#000;border-color:var(--white);box-shadow:0 0 12px rgba(255,255,255,0.15)}
   .tab:active{transform:scale(.96)}
+  /* ============ NOTICE BOARD (NEW) ============ */
+  .notice-board{
+    margin-top:2px;
+    background:linear-gradient(180deg,rgba(212,175,55,0.09),rgba(212,175,55,0.02));
+    border:1px solid rgba(212,175,55,0.28);
+    border-radius:12px;
+    padding:9px 11px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    animation:cardFade .4s;
+  }
+  .notice-board.hidden{display:none}
+  .notice-head{font-size:9px;letter-spacing:2px;color:var(--gold);font-weight:700;
+    text-transform:uppercase;display:flex;align-items:center;gap:6px;font-family:var(--display)}
+  .notice-body{max-height:78px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;
+    scrollbar-width:thin}
+  .notice-body::-webkit-scrollbar{width:3px}
+  .notice-item{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--text);
+    line-height:1.45;padding:6px 8px;background:rgba(0,0,0,0.28);
+    border-radius:8px;border:1px solid rgba(212,175,55,0.15)}
+  .notice-item .txt{flex:1;word-break:break-word;white-space:pre-wrap}
+  .notice-item .del{width:18px;height:18px;border-radius:50%;background:var(--red-dim);
+    color:var(--red);border:1px solid rgba(255,59,59,0.35);cursor:pointer;
+    font-size:12px;font-weight:900;line-height:1;display:grid;place-items:center;
+    flex-shrink:0;transition:all .15s;font-family:inherit}
+  .notice-item .del:active{transform:scale(.85)}
+  .notice-empty{font-size:10px;color:var(--muted);text-align:center;padding:4px}
+  /* =========================================== */
   main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:18px 14px 40px}
   .view{display:none;animation:viewIn .4s cubic-bezier(.2,.9,.3,1)}
   .view.active{display:block}
@@ -275,6 +304,15 @@
     padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--line)}
   .msg-action-box .detail-row .k{color:var(--muted)}
   .msg-action-box .detail-row .v{color:var(--white);font-family:var(--mono);text-align:right;word-break:break-word}
+  /* ============ NEW: Accept / Cancel buttons ============ */
+  .msg-action-box .btn-row{display:flex;gap:8px;margin-top:12px}
+  .msg-action-box .btn-row button{flex:1;padding:11px;border-radius:10px;border:none;
+    font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+    cursor:pointer;font-family:inherit;transition:all .2s;width:auto}
+  .msg-action-box .btn-row .accept{background:linear-gradient(180deg,var(--green),#00a844);color:#000}
+  .msg-action-box .btn-row .cancel{background:transparent;color:var(--red);border:1.5px solid rgba(255,59,59,0.5)}
+  .msg-action-box .btn-row button:active{transform:scale(.97)}
+  /* ====================================================== */
   .chat-input-row{display:flex;gap:8px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line);background:var(--panel);margin:0 -18px;padding-left:18px;padding-right:18px;align-items:center}
   .chat-input-row input{flex:1;background:var(--panel2);border:1.5px solid var(--line);
@@ -374,6 +412,11 @@
       <button class="tab" data-view="pubchat">🌐 Public Chat</button>
       <button class="tab" data-view="admin" id="adminTabBtn" style="display:none">⚙️ Admin</button>
     </div>
+    <!-- ============ NOTICE BOARD (NEW) ============ -->
+    <div class="notice-board hidden" id="noticeBoard">
+      <div class="notice-head">📢 NOTICE BOARD</div>
+      <div class="notice-body" id="noticeBody"></div>
+    </div>
   </header>
   <main>
     <div class="view active" id="view-market">
@@ -418,6 +461,21 @@
     </div>
 
     <div class="view" id="view-admin">
+      <!-- ============ NOTICE BOARD ADMIN (NEW) ============ -->
+      <div class="admin-section">
+        <h3><span class="left">Notice Board</span></h3>
+        <div class="field"><label>New Notice</label><textarea id="noticeInput" rows="2" placeholder="Type notice for all users..." maxlength="500"></textarea></div>
+        <div class="row" style="margin-bottom:10px">
+          <button class="btn small gold" id="addNoticeBtn">➕ Add Notice</button>
+          <button class="btn small ghost" id="noticeToggleBtn">Hide Board</button>
+          <button class="btn small danger" id="noticeClearBtn">Clear All Notices</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">
+          Board visibility: <span id="noticeBoardStatus">—</span>
+        </div>
+      </div>
+      <!-- =============================================== -->
+
       <div class="admin-section">
         <h3><span class="left">Add Listing</span></h3>
         <div class="field"><label>Title</label><input type="text" id="alTitle" maxlength="80" placeholder="Product name"></div>
@@ -540,6 +598,7 @@ let chatChannel = null;
 let listChannel = null;
 let pubChannel = null;
 let orderChannel = null;
+let noticeChannel = null;
 let unreadCount = 0;
 let pubPollTimer = null;
 
@@ -653,6 +712,8 @@ sb.auth.onAuthStateChange(async (event, session) => {
       await loadChats();
       await loadOrders();
       await loadPublicChat();
+      await loadNotices();          /* NEW */
+      updateNoticeBoardAdminUI();   /* NEW */
       if (ME.role === 'admin') await loadAdminData();
       setupRealtime();
       startPublicChatPolling();
@@ -672,6 +733,7 @@ async function loadSettings() {
   SETTINGS = {};
   (data || []).forEach(s => SETTINGS[s.key] = s.value);
   updateChatStatusUI();
+  updateNoticeBoardAdminUI(); /* NEW */
 }
 function updateChatStatusUI() {
   const enabled = SETTINGS.public_chat_enabled === 'true';
@@ -866,6 +928,7 @@ async function openChat(chatId, listing) {
     ACTIVE_ORDER = await ensureOrderExists(chatId, listing, true);
   }
   if (ACTIVE_ORDER && !ACTIVE_ORDER.details_status) ACTIVE_ORDER.details_status = 'none';
+  if (ACTIVE_ORDER && !ACTIVE_ORDER.buyer_confirmation) ACTIVE_ORDER.buyer_confirmation = 'none';
 
   renderChatActions();
   await loadMessages();
@@ -998,7 +1061,8 @@ function openAdminDetailsForm() {
     $('aSubmit').disabled = true; $('aSubmit').textContent = 'SENDING...';
 
     const { error } = await sb.from('orders').update({
-      admin_location: loc, admin_time: time, details_status: 'confirmed'
+      admin_location: loc, admin_time: time, details_status: 'confirmed',
+      buyer_confirmation: 'none'  /* NEW: reset buyer decision when admin confirms */
     }).eq('id', ACTIVE_ORDER.id);
 
     if (error) { $('aErr').textContent = error.message; $('aSubmit').disabled = false; $('aSubmit').textContent = 'Confirm & Send to Buyer'; return; }
@@ -1011,6 +1075,7 @@ function openAdminDetailsForm() {
     ACTIVE_ORDER.admin_location = loc;
     ACTIVE_ORDER.admin_time = time;
     ACTIVE_ORDER.details_status = 'confirmed';
+    ACTIVE_ORDER.buyer_confirmation = 'none';  /* NEW */
     closeModal('formModal');
     toast('Delivery details sent to buyer', 'ok');
     loadMessages();
@@ -1020,6 +1085,55 @@ function openAdminDetailsForm() {
 }
 
 window.openUserDetailsForm = openUserDetailsForm;
+
+/* ============================================================
+   NEW: BUYER ACCEPT / CANCEL ORDER
+   ============================================================ */
+async function buyerAcceptOrder() {
+  if (!ACTIVE_ORDER || !ACTIVE_CHAT) return;
+  if (!confirm('Accept this order? Admin will be notified.')) return;
+
+  const { error } = await sb.from('orders').update({
+    buyer_confirmation: 'accepted'
+  }).eq('id', ACTIVE_ORDER.id);
+
+  if (error) { toast(error.message, 'err'); return; }
+
+  await sb.from('messages').insert({
+    chat_id: ACTIVE_CHAT, sender_id: ME.id, sender_role: 'buyer',
+    text: 'Buyer accepted the order', message_type: 'buyer_accepted'
+  });
+
+  ACTIVE_ORDER.buyer_confirmation = 'accepted';
+  toast('Order accepted ✓', 'ok');
+  loadMessages();
+  loadOrders();
+}
+
+async function buyerCancelOrder() {
+  if (!ACTIVE_ORDER || !ACTIVE_CHAT) return;
+  if (!confirm('Cancel this order? This will notify the admin and cannot be undone.')) return;
+
+  const { error } = await sb.from('orders').update({
+    buyer_confirmation: 'cancelled',
+    delivery_status: 'cancelled'
+  }).eq('id', ACTIVE_ORDER.id);
+
+  if (error) { toast(error.message, 'err'); return; }
+
+  await sb.from('messages').insert({
+    chat_id: ACTIVE_CHAT, sender_id: ME.id, sender_role: 'buyer',
+    text: 'Buyer cancelled the order', message_type: 'buyer_cancelled'
+  });
+
+  ACTIVE_ORDER.buyer_confirmation = 'cancelled';
+  ACTIVE_ORDER.delivery_status = 'cancelled';
+  toast('Order cancelled', 'warn');
+  loadMessages();
+  loadOrders();
+}
+window.buyerAcceptOrder = buyerAcceptOrder;
+window.buyerCancelOrder = buyerCancelOrder;
 
 /* ============================================================
    MESSAGES
@@ -1034,6 +1148,11 @@ async function loadMessages() {
 function renderMessages(msgs) {
   const box = $('chatMessages');
   if (!msgs.length) { box.innerHTML = '<div style="text-align:center;color:var(--dim);font-size:11px;padding:20px">No messages yet</div>'; return; }
+
+  /* NEW: find latest detail_confirmed to attach accept/cancel only on the newest */
+  const lastConfirmed = [...msgs].reverse().find(m => m.message_type === 'detail_confirmed');
+  const lastConfirmedId = lastConfirmed ? lastConfirmed.id : null;
+  const buyerConf = (ACTIVE_ORDER && ACTIVE_ORDER.buyer_confirmation) ? ACTIVE_ORDER.buyer_confirmation : 'none';
 
   box.innerHTML = msgs.map(m => {
     const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -1066,12 +1185,54 @@ function renderMessages(msgs) {
     }
 
     if (m.message_type === 'detail_confirmed') {
+      const isLatest = m.id === lastConfirmedId;
+      let actionHtml = '';
+
+      if (ME.role === 'admin') {
+        if (buyerConf === 'accepted') {
+          actionHtml = `<div class="desc" style="color:var(--green);margin-top:10px;margin-bottom:0;font-weight:700">✅ Buyer accepted the order</div>`;
+        } else if (buyerConf === 'cancelled') {
+          actionHtml = `<div class="desc" style="color:var(--red);margin-top:10px;margin-bottom:0;font-weight:700">❌ Buyer cancelled the order</div>`;
+        } else if (isLatest) {
+          actionHtml = `<div class="desc" style="margin-top:10px;margin-bottom:0">⏳ Waiting for buyer to accept / cancel...</div>`;
+        }
+      } else {
+        if (buyerConf === 'accepted') {
+          actionHtml = `<div class="desc" style="color:var(--green);margin-top:10px;margin-bottom:0;font-weight:700">✓ You accepted this order</div>`;
+        } else if (buyerConf === 'cancelled') {
+          actionHtml = `<div class="desc" style="color:var(--red);margin-top:10px;margin-bottom:0;font-weight:700">✕ You cancelled this order</div>`;
+        } else if (isLatest) {
+          actionHtml = `<div class="btn-row">
+            <button class="accept" onclick="buyerAcceptOrder()">✓ Accept Order</button>
+            <button class="cancel" onclick="buyerCancelOrder()">✕ Cancel Order</button>
+          </div>`;
+        }
+      }
+
+      const descText = ME.role === 'admin'
+        ? 'Delivery details have been sent to buyer.'
+        : 'Your product will be delivered at this location & time.';
       return `<div class="msg-action-box details-shown">
         <div class="title">📦 Delivery Details Confirmed</div>
         <div class="detail-row"><span class="k">Delivery Location</span><span class="v">${esc(ACTIVE_ORDER?.admin_location || '-')}</span></div>
         <div class="detail-row"><span class="k">Delivery Time</span><span class="v">${esc(ACTIVE_ORDER?.admin_time || '-')}</span></div>
-        <div class="desc" style="margin-top:10px;margin-bottom:0">Your product will be delivered at this location & time.</div>
+        <div class="desc" style="margin-top:10px;margin-bottom:0">${descText}</div>
+        ${actionHtml}
       </div>`;
+    }
+
+    if (m.message_type === 'buyer_accepted') {
+      if (ME.role === 'admin') {
+        return `<div class="msg system" style="background:rgba(0,255,102,0.1);color:var(--green);border-color:rgba(0,255,102,0.4)">✅ Buyer accepted the order<div class="meta">${time}</div></div>`;
+      }
+      return `<div class="msg system" style="background:rgba(0,255,102,0.1);color:var(--green);border-color:rgba(0,255,102,0.4)">✓ You accepted the order<div class="meta">${time}</div></div>`;
+    }
+
+    if (m.message_type === 'buyer_cancelled') {
+      if (ME.role === 'admin') {
+        return `<div class="msg system" style="background:rgba(255,59,59,0.1);color:var(--red);border-color:rgba(255,59,59,0.4)">❌ Buyer cancelled the order<div class="meta">${time}</div></div>`;
+      }
+      return `<div class="msg system" style="background:rgba(255,59,59,0.1);color:var(--red);border-color:rgba(255,59,59,0.4)">✕ You cancelled the order<div class="meta">${time}</div></div>`;
     }
 
     return `<div class="msg ${m.sender_role}">
@@ -1126,6 +1287,12 @@ function renderOrderCard(o) {
   const detailsLabel = { none: 'Chatting', requested: 'Details Requested', user_submitted: 'Details Submitted', confirmed: 'Delivery Confirmed' }[dStatus] || 'Chatting';
   const cur = o.currency || listing.currency || 'LKR';
   const priceStr = fmtPrice(o.amount_usd, cur);
+
+  /* NEW: show buyer confirmation state */
+  const bc = o.buyer_confirmation || 'none';
+  const bcLabel = bc === 'accepted' ? '✅ You accepted'
+                : bc === 'cancelled' ? '❌ You cancelled' : '';
+
   return `<div class="order-card">
     <div class="order-header">
       <span class="order-id">#${o.id.slice(0,8)}</span>
@@ -1134,6 +1301,7 @@ function renderOrderCard(o) {
     <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
     <div class="order-row"><span class="k">Amount</span><span class="v">${esc(priceStr)} (COD)</span></div>
     <div class="order-row"><span class="k">Status</span><span class="v">${detailsLabel}</span></div>
+    ${bcLabel ? `<div class="order-row"><span class="k">Your Response</span><span class="v" style="color:${bc === 'accepted' ? 'var(--green)' : 'var(--red)'}">${bcLabel}</span></div>` : ''}
     ${o.admin_location ? `<div class="order-row"><span class="k">Delivery Location</span><span class="v">${esc(o.admin_location)}</span></div>` : ''}
     ${o.admin_time ? `<div class="order-row"><span class="k">Delivery Time</span><span class="v">${esc(o.admin_time)}</span></div>` : ''}
     <div class="order-row"><span class="k">Date</span><span class="v">${new Date(o.created_at).toLocaleDateString()}</span></div>
@@ -1205,6 +1373,94 @@ function startPublicChatPolling() {
     if (v && v.classList.contains('active')) loadPublicChat();
   }, 4000);
 }
+
+/* ============================================================
+   NEW: NOTICE BOARD
+   ============================================================ */
+async function loadNotices() {
+  const board = $('noticeBoard');
+  const body = $('noticeBody');
+  if (!board || !body) return;
+
+  const visible = SETTINGS.notice_board_visible !== 'false';
+
+  if (!visible) {
+    board.classList.add('hidden');
+  } else {
+    board.classList.remove('hidden');
+  }
+
+  const { data, error } = await sb.from('notices').select('*').order('created_at', { ascending: false });
+  if (error) { console.error('Notices load error:', error); return; }
+
+  if (!data || !data.length) {
+    body.innerHTML = '<div class="notice-empty">No notices</div>';
+    return;
+  }
+
+  body.innerHTML = data.map(n => `<div class="notice-item">
+    <div class="txt">${esc(n.text)}</div>
+    ${ME.role === 'admin' ? `<button class="del" data-ndel="${n.id}" title="Delete">×</button>` : ''}
+  </div>`).join('');
+
+  body.querySelectorAll('[data-ndel]').forEach(b => {
+    b.addEventListener('click', async () => {
+      if (!confirm('Delete this notice?')) return;
+      const { error } = await sb.from('notices').delete().eq('id', b.dataset.ndel);
+      if (error) { toast(error.message, 'err'); return; }
+      toast('Notice removed', 'ok');
+      loadNotices();
+    });
+  });
+}
+
+function updateNoticeBoardAdminUI() {
+  const btn = $('noticeToggleBtn');
+  const status = $('noticeBoardStatus');
+  const visible = SETTINGS.notice_board_visible !== 'false';
+  if (btn) btn.textContent = visible ? 'Hide Board' : 'Show Board';
+  if (status) {
+    status.textContent = visible ? 'VISIBLE' : 'HIDDEN';
+    status.style.color = visible ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+/* Admin: add notice */
+$('addNoticeBtn').addEventListener('click', async () => {
+  const text = $('noticeInput').value.trim();
+  if (!text) { toast('Enter notice text', 'warn'); return; }
+  if (ME.role !== 'admin') return;
+  const { error } = await sb.from('notices').insert({ text, created_by: ME.id });
+  if (error) { toast(error.message, 'err'); return; }
+  $('noticeInput').value = '';
+  toast('Notice posted', 'ok');
+  loadNotices();
+});
+
+/* Admin: toggle visibility */
+$('noticeToggleBtn').addEventListener('click', async () => {
+  if (ME.role !== 'admin') return;
+  const visible = SETTINGS.notice_board_visible !== 'false';
+  const newVal = visible ? 'false' : 'true';
+  const { error } = await sb.from('settings').upsert({
+    key: 'notice_board_visible', value: newVal, updated_at: new Date().toISOString()
+  });
+  if (error) { toast(error.message, 'err'); return; }
+  toast(newVal === 'true' ? 'Notice board visible' : 'Notice board hidden', newVal === 'true' ? 'ok' : 'warn');
+  await loadSettings();
+  loadNotices();
+  updateNoticeBoardAdminUI();
+});
+
+/* Admin: clear all notices */
+$('noticeClearBtn').addEventListener('click', async () => {
+  if (ME.role !== 'admin') return;
+  if (!confirm('Delete ALL notices? Cannot be undone.')) return;
+  const { error } = await sb.from('notices').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) { toast(error.message, 'err'); return; }
+  toast('All notices removed', 'ok');
+  loadNotices();
+});
 
 /* ============================================================
    ADMIN PANEL
@@ -1365,13 +1621,20 @@ async function loadAdminOrders() {
     const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Delivery Confirmed' };
     const cur = o.currency || listing.currency || 'LKR';
     const priceStr = fmtPrice(o.amount_usd, cur);
+
+    /* NEW: buyer confirmation status */
+    const bc = o.buyer_confirmation || 'none';
+    let bcChip = '';
+    if (bc === 'accepted') bcChip = '<span class="chip green">✅ BUYER ACCEPTED</span>';
+    else if (bc === 'cancelled') bcChip = '<span class="chip red">❌ BUYER CANCELLED</span>';
+
     return `<div class="admin-order">
       <div class="hdr">
         <b>#${o.id.slice(0,8)} · ${esc(listing.title || 'Deleted')}</b>
         <span class="chip ${dStatus === 'confirmed' ? 'green' : dStatus === 'user_submitted' ? 'gold' : 'red'}">${detailsLabels[dStatus] || 'Chatting'}</span>
       </div>
       <div class="info">
-        Buyer: <b>${esc(buyerName)}</b> · ${esc(priceStr)} (COD)<br>
+        Buyer: <b>${esc(buyerName)}</b> ${bcChip ? '· ' + bcChip : ''} · ${esc(priceStr)} (COD)<br>
         ${o.user_location ? `Buyer Loc: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
         ${o.admin_location ? `Delivery Loc: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
         Delivery: ${labels[o.delivery_status] || 'Pending'}
@@ -1478,7 +1741,7 @@ async function loadAdminPubMsgs() {
    REALTIME
    ============================================================ */
 function setupRealtime() {
-  [chatChannel, listChannel, pubChannel, orderChannel].forEach(c => { if (c) sb.removeChannel(c); });
+  [chatChannel, listChannel, pubChannel, orderChannel, noticeChannel].forEach(c => { if (c) sb.removeChannel(c); });
 
   chatChannel = sb.channel('rt-messages-' + ME.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -1526,7 +1789,14 @@ function setupRealtime() {
       if (ME.role === 'admin' && $('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
-      loadSettings(); loadPublicChat();
+      loadSettings(); loadPublicChat(); loadNotices();  /* NEW: also reload notices on settings change */
+    })
+    .subscribe();
+
+  /* NEW: Realtime notices channel */
+  noticeChannel = sb.channel('rt-notices-' + ME.id)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => {
+      loadNotices();
     })
     .subscribe();
 }
