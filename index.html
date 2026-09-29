@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#050505">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>BONECASTLE // Market</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -35,7 +34,6 @@
   ::-webkit-scrollbar-track{background:var(--bg)}
   ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
 
-  /* ===== LOGO IMG ===== */
   .logo-img{display:block;object-fit:contain}
 
   /* ===== SPLASH ===== */
@@ -287,17 +285,27 @@
 
   /* ===== CHAT MODAL ===== */
   #chatModal .modal-content{max-height:95vh;display:flex;flex-direction:column;padding-bottom:0}
-  .chat-header{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .chat-header{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .chat-header .thumb{width:40px;height:40px;border-radius:9px;background:var(--panel2);
     overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
   .chat-header .thumb img{width:100%;height:100%;object-fit:cover}
   .chat-header .info{flex:1;min-width:0}
   .chat-header .name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chat-header .sub{font-size:10px;color:var(--muted);margin-top:2px}
+  .chat-header .actions{display:flex;gap:6px;width:100%}
+  .chat-header .actions button{flex:1;padding:9px 12px;border-radius:9px;border:1px solid var(--line2);
+    background:transparent;color:var(--text);font-size:10px;font-weight:700;
+    letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .2s}
+  .chat-header .actions button.gold{background:linear-gradient(180deg,var(--gold),#a88428);color:#000;border-color:var(--gold)}
+  .chat-header .actions button:active{transform:scale(.97)}
+
   .messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:9px;min-height:200px}
   .msg{max-width:78%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word;animation:msgIn .3s;position:relative}
   .msg.buyer{align-self:flex-end;background:linear-gradient(180deg,#fff,#e5e5e5);color:#000;border-bottom-right-radius:4px}
   .msg.admin{align-self:flex-start;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.system{align-self:center;background:rgba(212,175,55,0.1);color:var(--gold);
+    border:1px dashed rgba(212,175,55,0.4);font-size:11px;text-align:center;
+    max-width:88%;font-family:var(--mono)}
   .msg .meta{font-size:9px;opacity:.6;margin-top:4px;letter-spacing:.5px}
   .msg.buyer .meta{text-align:right}
   .msg .msg-del-btn{
@@ -310,6 +318,35 @@
   }
   .msg.buyer .msg-del-btn{left:-6px;right:auto}
   .msg .msg-del-btn:active{transform:scale(.85)}
+
+  /* Special action buttons inside chat */
+  .msg-action-box{
+    align-self:center;max-width:92%;width:100%;
+    background:linear-gradient(180deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04));
+    border:1.5px solid rgba(212,175,55,0.4);border-radius:14px;
+    padding:14px;text-align:center;animation:msgIn .3s;
+  }
+  .msg-action-box .title{font-size:11px;letter-spacing:1.5px;color:var(--gold);
+    text-transform:uppercase;margin-bottom:8px;font-weight:700}
+  .msg-action-box .desc{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+  .msg-action-box button{
+    width:100%;padding:12px;border-radius:10px;border:none;
+    background:linear-gradient(180deg,var(--gold),#a88428);
+    color:#000;font-size:11px;font-weight:800;letter-spacing:1.5px;
+    text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .2s;
+  }
+  .msg-action-box button:active{transform:scale(.97)}
+  .msg-action-box.details-shown{
+    background:rgba(0,255,102,0.06);border-color:rgba(0,255,102,0.3);
+  }
+  .msg-action-box.details-shown .title{color:var(--green)}
+  .msg-action-box .detail-row{
+    display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;
+    padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid var(--line)
+  }
+  .msg-action-box .detail-row .k{color:var(--muted)}
+  .msg-action-box .detail-row .v{color:var(--white);font-family:var(--mono);text-align:right;word-break:break-word}
+
   .chat-input-row{display:flex;gap:8px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line);background:var(--panel);margin:0 -18px;padding-left:18px;padding-right:18px;align-items:center}
   .chat-input-row input{flex:1;background:var(--panel2);border:1.5px solid var(--line);
@@ -544,8 +581,12 @@
   <div class="modal-content">
     <div class="chat-header">
       <div class="thumb" id="chatThumb"></div>
-      <div class="info"><div class="name" id="chatName">—</div><div class="sub" id="chatSub">—</div></div>
+      <div class="info">
+        <div class="name" id="chatName">—</div>
+        <div class="sub" id="chatSub">—</div>
+      </div>
       <button class="modal-close" data-close="chatModal">×</button>
+      <div class="actions" id="chatActions"></div>
     </div>
     <div class="messages" id="chatMessages"></div>
     <div class="chat-input-row">
@@ -555,10 +596,10 @@
   </div>
 </div>
 
-<div class="modal" id="checkoutModal">
+<div class="modal" id="formModal">
   <div class="modal-content">
-    <div class="modal-head"><span class="modal-title">Confirm Order (COD)</span><button class="modal-close" data-close="checkoutModal">×</button></div>
-    <div id="checkoutBody"></div>
+    <div class="modal-head"><span class="modal-title" id="formModalTitle">Details</span><button class="modal-close" data-close="formModal">×</button></div>
+    <div id="formModalBody"></div>
   </div>
 </div>
 
@@ -572,17 +613,11 @@
    ============================================================ */
 const SUPABASE_URL = 'https://ihyzyinqpvhlrqbkgsey.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_O_w7vzfNhn1smiLOooUy9A_qdU7XzIH';
-
-/* ============================================================
-   ⚠️ LOGO — Your Catbox URL
-   ============================================================ */
 const LOGO_URL = 'https://files.catbox.moe/8iv6s9.jpg';
 
 /* Apply logo */
 function applyLogo() {
-  document.querySelectorAll('.logo-img').forEach(img => {
-    img.src = LOGO_URL;
-  });
+  document.querySelectorAll('.logo-img').forEach(img => { img.src = LOGO_URL; });
 }
 
 /* ============================================================
@@ -593,10 +628,12 @@ const $ = id => document.getElementById(id);
 let ME = { id: null, username: null, role: 'user', is_banned: false };
 let SETTINGS = {};
 let ACTIVE_CHAT = null;
-let ACTIVE_LISTING = null;
+let ACTIVE_CHAT_LISTING = null;
+let ACTIVE_ORDER = null;
 let chatChannel = null;
 let listChannel = null;
 let pubChannel = null;
+let orderChannel = null;
 let unreadCount = 0;
 let pubPollTimer = null;
 
@@ -694,9 +731,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
       }
       if (!prof) { toast('Profile error', 'err'); return; }
       ME = { id: prof.id, username: prof.username, role: prof.role, is_banned: prof.is_banned };
-
       if (ME.is_banned) { toast('Your account has been banned', 'err'); await sb.auth.signOut(); return; }
-
       if (ME.role === 'admin') {
         $('adminTabBtn').style.display = 'inline-block';
         $('roleBadge').style.display = 'inline-block';
@@ -704,14 +739,12 @@ sb.auth.onAuthStateChange(async (event, session) => {
       $('userDisplay').textContent = ME.username;
       $('authScreen').classList.remove('on');
       $('appScreen').classList.add('on');
-
       await loadSettings();
       await loadListings();
       await loadChats();
       await loadOrders();
       await loadPublicChat();
       if (ME.role === 'admin') await loadAdminData();
-
       setupRealtime();
       startPublicChatPolling();
     } catch (e) { console.error(e); toast('Session error: ' + e.message, 'err'); }
@@ -809,64 +842,58 @@ function openListingDetail(listing) {
     <div class="detail-desc">${esc(listing.description)}</div>
     <div class="cod-info">
       <b>💵 Cash on Delivery</b><br>
-      Pay in cash when your item is delivered. No advance payment required.
+      Start a chat with the seller to discuss details.
     </div>
     <div class="ornament"><div class="ornament-line"></div><div class="ornament-diamond"></div><div class="ornament-line"></div></div>
-    <button class="btn gold" id="buyNowBtn">📦 Order Now (COD)</button>
+    <button class="btn gold" id="buyNowBtn">💬 Chat & Order</button>
   `;
-  $('buyNowBtn').addEventListener('click', () => startCheckout(listing));
+  $('buyNowBtn').addEventListener('click', () => startOrder(listing));
   openModal('detailModal');
 }
 
-async function startCheckout(listing) {
+/* ============================================================
+   NEW ORDER FLOW — Direct Chat (no details form)
+   ============================================================ */
+async function startOrder(listing) {
   ACTIVE_LISTING = listing;
+  // Check existing chat for this listing
   const { data: existing } = await sb.from('chats').select('*').eq('listing_id', listing.id).eq('buyer_id', ME.id).maybeSingle();
-  if (existing) { closeModal('detailModal'); openChat(existing.id, listing); return; }
-  $('checkoutBody').innerHTML = `
-    <div class="field"><label>Full Name</label><input type="text" id="coName" placeholder="Your name"></div>
-    <div class="field"><label>Phone Number</label><input type="text" id="coPhone" placeholder="+94 XX XXX XXXX"></div>
-    <div class="field"><label>Delivery Address</label><input type="text" id="coAddress" placeholder="Street address"></div>
-    <div class="field"><label>City</label><input type="text" id="coCity" placeholder="City"></div>
-    <div class="field"><label>Notes (optional)</label><textarea id="coNotes" rows="2" placeholder="Special instructions"></textarea></div>
-    <div class="cod-info" style="margin-bottom:14px">
-      <b>Total to pay on delivery:</b> $${parseFloat(listing.price_usd).toFixed(2)}
-    </div>
-    <button class="btn gold" id="coConfirm">Confirm Order</button>
-    <div class="auth-err" id="coErr"></div>
-  `;
-  $('coConfirm').addEventListener('click', async () => {
-    const name = $('coName').value.trim();
-    const phone = $('coPhone').value.trim();
-    const addr = $('coAddress').value.trim();
-    const city = $('coCity').value.trim();
-    const notes = $('coNotes').value.trim();
-    const err = $('coErr');
-    if (!name || !phone || !addr || !city) { err.textContent = 'All required fields must be filled'; return; }
-    $('coConfirm').disabled = true; $('coConfirm').textContent = 'PLACING ORDER...';
-    try {
-      const { data: newChat, error: chatErr } = await sb.from('chats').insert({ listing_id: listing.id, buyer_id: ME.id }).select().single();
-      if (chatErr) throw chatErr;
-      const { error: orderErr } = await sb.from('orders').insert({
-        listing_id: listing.id, buyer_id: ME.id, chat_id: newChat.id,
-        amount_usd: listing.price_usd, payment_method: 'COD',
-        delivery_status: 'pending',
-        delivery_full_name: name, delivery_phone: phone,
-        delivery_address: addr, delivery_city: city, delivery_notes: notes
-      });
-      if (orderErr) throw orderErr;
-      await sb.from('messages').insert({
-        chat_id: newChat.id, sender_id: ME.id, sender_role: 'buyer',
-        text: `📦 New COD Order for "${listing.title}" ($${listing.price_usd})\n\nName: ${name}\nPhone: ${phone}\nAddress: ${addr}, ${city}${notes ? '\nNotes: ' + notes : ''}`
-      });
-      closeModal('checkoutModal'); closeModal('detailModal');
-      toast('Order placed! Admin will contact you.', 'ok');
-      loadOrders(); loadChats();
-      setTimeout(() => openChat(newChat.id, listing), 400);
-    } catch (e) { err.textContent = e.message; }
-    finally { $('coConfirm').disabled = false; $('coConfirm').textContent = 'Confirm Order'; }
-  });
+
+  let chat = existing;
+  let order = null;
+
+  if (!chat) {
+    // Create chat
+    const { data: newChat, error: chatErr } = await sb.from('chats').insert({ listing_id: listing.id, buyer_id: ME.id }).select().single();
+    if (chatErr) { toast(chatErr.message, 'err'); return; }
+    chat = newChat;
+
+    // Create order (minimal - just listing, buyer, amount)
+    const { data: newOrder, error: orderErr } = await sb.from('orders').insert({
+      listing_id: listing.id,
+      buyer_id: ME.id,
+      chat_id: chat.id,
+      amount_usd: listing.price_usd,
+      payment_method: 'COD',
+      delivery_status: 'pending',
+      details_status: 'none'
+    }).select().single();
+    if (orderErr) { console.error(orderErr); }
+
+    // Auto welcome message
+    await sb.from('messages').insert({
+      chat_id: chat.id,
+      sender_id: ME.id,
+      sender_role: 'buyer',
+      text: `Hello! I'm interested in "${listing.title}" ($${listing.price_usd}). Can we discuss the details?`,
+      message_type: 'text'
+    });
+  }
+
   closeModal('detailModal');
-  openModal('checkoutModal');
+  toast('Chat opened — discuss with admin', 'ok');
+  loadChats(); loadOrders();
+  setTimeout(() => openChat(chat.id, listing), 300);
 }
 
 /* ============================================================
@@ -900,34 +927,236 @@ async function loadChats() {
     });
   });
 }
+
 async function openChat(chatId, listing) {
   ACTIVE_CHAT = chatId;
+  ACTIVE_CHAT_LISTING = listing;
   $('chatName').textContent = listing?.title || 'Chat';
-  $('chatSub').textContent = ME.role === 'admin' ? 'Buyer conversation' : 'Seller';
+  $('chatSub').textContent = ME.role === 'admin' ? 'Buyer conversation' : 'Seller (Admin)';
   const img = (listing?.images && listing.images[0]) || '';
   $('chatThumb').innerHTML = img ? `<img src="${esc(img)}" alt="">` : '';
+
+  // Load order for this chat
+  const { data: orderData } = await sb.from('orders').select('*').eq('chat_id', chatId).maybeSingle();
+  ACTIVE_ORDER = orderData;
+
+  renderChatActions();
   await loadMessages();
   openModal('chatModal');
   setTimeout(() => $('chatInput').focus(), 300);
 }
+
+/* Render admin action buttons in chat header */
+function renderChatActions() {
+  const box = $('chatActions');
+  box.innerHTML = '';
+
+  if (ME.role !== 'admin') return;
+
+  const ord = ACTIVE_ORDER;
+  if (!ord) return;
+
+  if (ord.details_status === 'none') {
+    // Admin can ask for details
+    const btn = document.createElement('button');
+    btn.className = 'gold';
+    btn.textContent = '📝 Ask for Details';
+    btn.addEventListener('click', askForDetails);
+    box.appendChild(btn);
+  } else if (ord.details_status === 'user_submitted') {
+    // Admin can confirm details
+    const btn = document.createElement('button');
+    btn.className = 'gold';
+    btn.textContent = '✓ Confirm Details';
+    btn.addEventListener('click', openAdminDetailsForm);
+    box.appendChild(btn);
+  } else if (ord.details_status === 'confirmed') {
+    // Show status
+    const span = document.createElement('div');
+    span.style.cssText = 'flex:1;text-align:center;font-size:10px;color:var(--green);letter-spacing:1px;padding:9px';
+    span.textContent = '✓ Details Confirmed';
+    box.appendChild(span);
+  }
+}
+
+/* Admin: Ask for details */
+async function askForDetails() {
+  if (!ACTIVE_ORDER || ME.role !== 'admin') return;
+  if (!confirm('Ask the buyer to enter location & time?')) return;
+
+  // Update order details_status
+  const { error: updErr } = await sb.from('orders').update({ details_status: 'requested' }).eq('id', ACTIVE_ORDER.id);
+  if (updErr) { toast(updErr.message, 'err'); return; }
+
+  // Send special message
+  await sb.from('messages').insert({
+    chat_id: ACTIVE_CHAT,
+    sender_id: ME.id,
+    sender_role: 'admin',
+    text: 'Admin requested order details',
+    message_type: 'detail_request'
+  });
+
+  ACTIVE_ORDER.details_status = 'requested';
+  toast('Request sent to buyer', 'ok');
+  loadMessages();
+  renderChatActions();
+}
+
+/* User: Open details form */
+function openUserDetailsForm() {
+  $('formModalTitle').textContent = 'Enter Order Details';
+  $('formModalBody').innerHTML = `
+    <div class="field"><label>Delivery Location</label><input type="text" id="uLoc" placeholder="Enter your address/location"></div>
+    <div class="field"><label>Preferred Time</label><input type="text" id="uTime" placeholder="e.g. Tomorrow 4:00 PM"></div>
+    <button class="btn gold" id="uSubmit">Submit Details</button>
+    <div class="auth-err" id="uErr"></div>
+  `;
+  $('uSubmit').addEventListener('click', async () => {
+    const loc = $('uLoc').value.trim();
+    const time = $('uTime').value.trim();
+    if (!loc || !time) { $('uErr').textContent = 'Both fields required'; return; }
+    $('uSubmit').disabled = true; $('uSubmit').textContent = 'SUBMITTING...';
+
+    const { error } = await sb.from('orders').update({
+      user_location: loc,
+      user_time: time,
+      details_status: 'user_submitted'
+    }).eq('id', ACTIVE_ORDER.id);
+
+    if (error) { $('uErr').textContent = error.message; $('uSubmit').disabled = false; $('uSubmit').textContent = 'Submit Details'; return; }
+
+    // Send system message with details
+    await sb.from('messages').insert({
+      chat_id: ACTIVE_CHAT,
+      sender_id: ME.id,
+      sender_role: 'buyer',
+      text: `Buyer submitted details`,
+      message_type: 'detail_submitted'
+    });
+
+    ACTIVE_ORDER.user_location = loc;
+    ACTIVE_ORDER.user_time = time;
+    ACTIVE_ORDER.details_status = 'user_submitted';
+    closeModal('formModal');
+    toast('Details submitted', 'ok');
+    loadMessages();
+  });
+  openModal('formModal');
+}
+
+/* Admin: Open confirm details form */
+function openAdminDetailsForm() {
+  $('formModalTitle').textContent = 'Confirm Delivery Details';
+  $('formModalBody').innerHTML = `
+    <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.25);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11px;color:var(--text);line-height:1.6">
+      <b style="color:var(--blue)">Buyer's Request:</b><br>
+      Location: ${esc(ACTIVE_ORDER.user_location || '-')}<br>
+      Time: ${esc(ACTIVE_ORDER.user_time || '-')}
+    </div>
+    <div class="field"><label>Confirmed Delivery Location</label><input type="text" id="aLoc" placeholder="Enter delivery location" value="${esc(ACTIVE_ORDER.user_location || '')}"></div>
+    <div class="field"><label>Confirmed Delivery Time</label><input type="text" id="aTime" placeholder="e.g. Tomorrow 4:00 PM" value="${esc(ACTIVE_ORDER.user_time || '')}"></div>
+    <button class="btn gold" id="aSubmit">Confirm & Send to Buyer</button>
+    <div class="auth-err" id="aErr"></div>
+  `;
+  $('aSubmit').addEventListener('click', async () => {
+    const loc = $('aLoc').value.trim();
+    const time = $('aTime').value.trim();
+    if (!loc || !time) { $('aErr').textContent = 'Both fields required'; return; }
+    $('aSubmit').disabled = true; $('aSubmit').textContent = 'CONFIRMING...';
+
+    const { error } = await sb.from('orders').update({
+      admin_location: loc,
+      admin_time: time,
+      details_status: 'confirmed'
+    }).eq('id', ACTIVE_ORDER.id);
+
+    if (error) { $('aErr').textContent = error.message; $('aSubmit').disabled = false; $('aSubmit').textContent = 'Confirm & Send to Buyer'; return; }
+
+    // Send system message
+    await sb.from('messages').insert({
+      chat_id: ACTIVE_CHAT,
+      sender_id: ME.id,
+      sender_role: 'admin',
+      text: `Delivery confirmed`,
+      message_type: 'detail_confirmed'
+    });
+
+    ACTIVE_ORDER.admin_location = loc;
+    ACTIVE_ORDER.admin_time = time;
+    ACTIVE_ORDER.details_status = 'confirmed';
+    closeModal('formModal');
+    toast('Delivery details confirmed', 'ok');
+    loadMessages();
+    renderChatActions();
+  });
+  openModal('formModal');
+}
+
+/* ============================================================
+   MESSAGES
+   ============================================================ */
 async function loadMessages() {
   if (!ACTIVE_CHAT) return;
   const { data, error } = await sb.from('messages').select('*').eq('chat_id', ACTIVE_CHAT).order('created_at', { ascending: true });
   if (error) { toast(error.message, 'err'); return; }
   renderMessages(data || []);
 }
+
 function renderMessages(msgs) {
   const box = $('chatMessages');
   if (!msgs.length) { box.innerHTML = '<div style="text-align:center;color:var(--dim);font-size:11px;padding:20px">No messages yet</div>'; return; }
+
   box.innerHTML = msgs.map(m => {
+    const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const delBtn = ME.role === 'admin' ? `<button class="msg-del-btn" data-msgdel="${m.id}" title="Delete">×</button>` : '';
+
+    // Special message types
+    if (m.message_type === 'detail_request') {
+      // Show "Enter Details" button to buyer only
+      if (ME.role === 'admin') {
+        return `<div class="msg system">📝 Asked buyer for delivery details<div class="meta">${time}</div></div>`;
+      }
+      return `<div class="msg-action-box">
+        <div class="title">📋 Details Required</div>
+        <div class="desc">Admin has requested your delivery details. Please provide location and preferred time.</div>
+        <button onclick="openUserDetailsForm()">Enter Details</button>
+      </div>`;
+    }
+
+    if (m.message_type === 'detail_submitted') {
+      // Show user's submitted details
+      if (ME.role === 'admin') {
+        return `<div class="msg-action-box details-shown">
+          <div class="title">📥 Buyer Submitted Details</div>
+          <div class="detail-row"><span class="k">Location</span><span class="v">${esc(ACTIVE_ORDER?.user_location || '-')}</span></div>
+          <div class="detail-row"><span class="k">Time</span><span class="v">${esc(ACTIVE_ORDER?.user_time || '-')}</span></div>
+        </div>`;
+      }
+      return `<div class="msg-action-box details-shown">
+        <div class="title">✓ Details Sent</div>
+        <div class="desc">Your details have been sent to admin. Waiting for confirmation...</div>
+      </div>`;
+    }
+
+    if (m.message_type === 'detail_confirmed') {
+      return `<div class="msg-action-box details-shown">
+        <div class="title">✓ Delivery Confirmed</div>
+        <div class="detail-row"><span class="k">Location</span><span class="v">${esc(ACTIVE_ORDER?.admin_location || '-')}</span></div>
+        <div class="detail-row"><span class="k">Time</span><span class="v">${esc(ACTIVE_ORDER?.admin_time || '-')}</span></div>
+      </div>`;
+    }
+
+    // Regular messages
     return `<div class="msg ${m.sender_role}">
       ${delBtn}
       ${esc(m.text).replace(/\n/g, '<br>')}
-      <div class="meta">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="meta">${time}</div>
     </div>`;
   }).join('');
+
   box.scrollTop = box.scrollHeight;
+
   box.querySelectorAll('[data-msgdel]').forEach(b => {
     b.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -938,6 +1167,10 @@ function renderMessages(msgs) {
     });
   });
 }
+
+// Make globally accessible for inline onclick
+window.openUserDetailsForm = openUserDetailsForm;
+
 $('chatSendBtn').addEventListener('click', sendMessage);
 $('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 async function sendMessage() {
@@ -946,7 +1179,8 @@ async function sendMessage() {
   $('chatInput').value = '';
   await sb.from('messages').insert({
     chat_id: ACTIVE_CHAT, sender_id: ME.id,
-    sender_role: ME.role === 'admin' ? 'admin' : 'buyer', text: text
+    sender_role: ME.role === 'admin' ? 'admin' : 'buyer',
+    text: text, message_type: 'text'
   });
   loadMessages();
 }
@@ -964,10 +1198,8 @@ async function loadOrders() {
 }
 function renderOrderCard(o) {
   const listing = o.listings || {};
-  const labels = {
-    pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped',
-    delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled'
-  };
+  const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
+  const detailsLabel = { none: 'Chatting', requested: 'Details Requested', user_submitted: 'Details Submitted', confirmed: 'Details Confirmed' }[o.details_status] || '';
   return `<div class="order-card">
     <div class="order-header">
       <span class="order-id">#${o.id.slice(0,8)}</span>
@@ -975,10 +1207,10 @@ function renderOrderCard(o) {
     </div>
     <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
     <div class="order-row"><span class="k">Amount</span><span class="v">$${parseFloat(o.amount_usd).toFixed(2)} (COD)</span></div>
-    <div class="order-row"><span class="k">Deliver to</span><span class="v">${esc(o.delivery_address || '')}, ${esc(o.delivery_city || '')}</span></div>
-    <div class="order-row"><span class="k">Phone</span><span class="v">${esc(o.delivery_phone || '')}</span></div>
+    <div class="order-row"><span class="k">Status</span><span class="v">${detailsLabel}</span></div>
+    ${o.admin_location ? `<div class="order-row"><span class="k">Location</span><span class="v">${esc(o.admin_location)}</span></div>` : ''}
+    ${o.admin_time ? `<div class="order-row"><span class="k">Time</span><span class="v">${esc(o.admin_time)}</span></div>` : ''}
     <div class="order-row"><span class="k">Date</span><span class="v">${new Date(o.created_at).toLocaleDateString()}</span></div>
-    ${o.admin_notes ? `<div class="order-row"><span class="k">Notes</span><span class="v">${esc(o.admin_notes)}</span></div>` : ''}
   </div>`;
 }
 
@@ -986,14 +1218,9 @@ function renderOrderCard(o) {
    PUBLIC CHAT
    ============================================================ */
 async function loadPublicChat() {
-  const { data, error } = await sb.from('public_messages')
-    .select('*')
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: true })
-    .limit(1000);
+  const { data, error } = await sb.from('public_messages').select('*').eq('is_deleted', false).order('created_at', { ascending: true }).limit(1000);
   if (error) { console.error('Public chat load error:', error); return; }
   renderPublicChat(data || []);
-
   const enabled = SETTINGS.public_chat_enabled === 'true';
   if ($('pubchatInput')) {
     $('pubchatInput').disabled = !enabled;
@@ -1022,7 +1249,6 @@ function renderPublicChat(msgs) {
   }).join('');
   box.scrollTop = box.scrollHeight;
   $('pubchatCount').textContent = msgs.length + ' messages';
-
   box.querySelectorAll('[data-pubdel]').forEach(b => {
     b.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -1042,20 +1268,15 @@ async function sendPublicMsg() {
   if (!text) return;
   if (SETTINGS.public_chat_enabled !== 'true') { toast('Chat is shutdown', 'warn'); return; }
   $('pubchatInput').value = '';
-  const { error } = await sb.from('public_messages').insert({
-    user_id: ME.id, username: ME.username, text: text
-  });
+  const { error } = await sb.from('public_messages').insert({ user_id: ME.id, username: ME.username, text: text });
   if (error) { toast(error.message, 'err'); return; }
   loadPublicChat();
 }
-
 function startPublicChatPolling() {
   if (pubPollTimer) clearInterval(pubPollTimer);
   pubPollTimer = setInterval(() => {
     const v = $('view-pubchat');
-    if (v && v.classList.contains('active')) {
-      loadPublicChat();
-    }
+    if (v && v.classList.contains('active')) loadPublicChat();
   }, 4000);
 }
 
@@ -1124,8 +1345,7 @@ $('chatToggleBtn').addEventListener('click', async () => {
   const newVal = current ? 'false' : 'true';
   await sb.from('settings').upsert({ key: 'public_chat_enabled', value: newVal, updated_at: new Date().toISOString() });
   toast(newVal === 'true' ? 'Chat enabled' : 'Chat shutdown', newVal === 'true' ? 'ok' : 'warn');
-  await loadSettings();
-  loadPublicChat();
+  await loadSettings(); loadPublicChat();
 });
 $('chatClearBtn').addEventListener('click', async () => {
   if (!confirm('Delete ALL public chat messages? Cannot be undone.')) return;
@@ -1185,17 +1405,13 @@ async function loadAdminListings() {
     const img = (l.images && l.images[0]) || '';
     return `<div class="admin-listing">
       <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
-      <div class="body">
-        <b>${esc(l.title)}</b>
-        <small>$${parseFloat(l.price_usd).toFixed(2)} · ${l.status}</small>
-      </div>
+      <div class="body"><b>${esc(l.title)}</b><small>$${parseFloat(l.price_usd).toFixed(2)} · ${l.status}</small></div>
       <div class="row">
         <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? 'HIDE' : 'SHOW'}</button>
         <button class="btn tiny danger" data-ldelete="${l.id}">DEL</button>
       </div>
     </div>`;
   }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>';
-
   document.querySelectorAll('[data-ltoggle]').forEach(b => {
     b.addEventListener('click', async () => {
       const l = listings.find(x => x.id === b.dataset.ltoggle);
@@ -1219,40 +1435,38 @@ async function loadAdminListings() {
 async function loadAdminOrders() {
   const { data: orders, error } = await sb.from('orders').select('*, listings(title, images)').order('created_at', { ascending: false });
   if (error) { console.error('Admin orders error:', error); toast('Orders load failed: ' + error.message, 'err'); return; }
-
   const buyerIds = [...new Set((orders||[]).map(o => o.buyer_id).filter(Boolean))];
   const buyersMap = {};
   if (buyerIds.length) {
     const { data: buyers } = await sb.from('profiles').select('id, username').in('id', buyerIds);
     (buyers||[]).forEach(b => buyersMap[b.id] = b.username);
   }
-
   $('orderCount').textContent = orders?.length || 0;
   $('adminOrders').innerHTML = (orders || []).map(o => {
     const listing = o.listings || {};
     const buyerName = buyersMap[o.buyer_id] || 'Unknown';
     const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
+    const detailsLabels = { none: 'Chatting', requested: 'Asked Details', user_submitted: 'Details In', confirmed: 'Confirmed' };
     return `<div class="admin-order">
       <div class="hdr">
         <b>#${o.id.slice(0,8)} · ${esc(listing.title || 'Deleted')}</b>
-        <span class="chip ${o.delivery_status === 'completed' ? 'green' : o.delivery_status === 'cancelled' ? 'red' : 'gold'}">${labels[o.delivery_status] || o.delivery_status}</span>
+        <span class="chip ${o.details_status === 'confirmed' ? 'green' : o.details_status === 'user_submitted' ? 'gold' : 'red'}">${detailsLabels[o.details_status] || 'Chatting'}</span>
       </div>
       <div class="info">
         Buyer: <b>${esc(buyerName)}</b> · $${parseFloat(o.amount_usd).toFixed(2)} (COD)<br>
-        Deliver: ${esc(o.delivery_full_name || '')} · ${esc(o.delivery_phone || '')}<br>
-        Addr: ${esc(o.delivery_address || '')}, ${esc(o.delivery_city || '')}
-        ${o.delivery_notes ? `<br>Notes: ${esc(o.delivery_notes)}` : ''}
+        ${o.user_location ? `Buyer Loc: ${esc(o.user_location)} · ${esc(o.user_time || '')}<br>` : ''}
+        ${o.admin_location ? `Final Loc: ${esc(o.admin_location)} · ${esc(o.admin_time || '')}<br>` : ''}
+        Status: ${labels[o.delivery_status] || o.delivery_status}
       </div>
       <div class="actions">
         <select class="btn tiny ghost" data-ostatus="${o.id}" style="padding:6px 8px;font-family:inherit">
           ${['pending','confirmed','shipped','delivered','completed','cancelled'].map(s => `<option value="${s}" ${o.delivery_status === s ? 'selected' : ''}>${labels[s]}</option>`).join('')}
         </select>
-        ${o.chat_id ? `<button class="btn tiny ghost" data-oopen="${o.chat_id}">CHAT</button>` : ''}
+        ${o.chat_id ? `<button class="btn tiny ghost" data-oopen="${o.chat_id}" data-olisting='${JSON.stringify(listing).replace(/'/g, "&#39;")}'>CHAT</button>` : ''}
         <button class="btn tiny danger" data-odelete="${o.id}">DELETE</button>
       </div>
     </div>`;
   }).join('') || '<div style="color:var(--muted);font-size:11px">No orders yet</div>';
-
   document.querySelectorAll('[data-ostatus]').forEach(s => {
     s.addEventListener('change', async () => {
       await sb.from('orders').update({ delivery_status: s.value }).eq('id', s.dataset.ostatus);
@@ -1261,7 +1475,12 @@ async function loadAdminOrders() {
     });
   });
   document.querySelectorAll('[data-oopen]').forEach(b => {
-    b.addEventListener('click', () => { if (b.dataset.oopen) openChat(b.dataset.oopen, null); });
+    b.addEventListener('click', () => {
+      if (!b.dataset.oopen) return;
+      let listing = null;
+      try { listing = JSON.parse(b.dataset.olisting); } catch(e) {}
+      openChat(b.dataset.oopen, listing);
+    });
   });
   document.querySelectorAll('[data-odelete]').forEach(b => {
     b.addEventListener('click', async () => {
@@ -1278,21 +1497,14 @@ async function loadAdminUsers() {
   const { data: users, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
   if (error) console.error('Users error:', error);
   $('userCount').textContent = users?.length || 0;
-  $('adminUsers').innerHTML = (users || []).map(u => {
-    return `<div class="user-item">
-      <div class="name">
-        <span>${esc(u.username)} ${u.role === 'admin' ? '<span class="chip gold">ADMIN</span>' : ''} ${u.is_banned ? '<span class="chip red">BANNED</span>' : ''}</span>
-      </div>
+  $('adminUsers').innerHTML = (users || []).map(u => `<div class="user-item">
+      <div class="name"><span>${esc(u.username)} ${u.role === 'admin' ? '<span class="chip gold">ADMIN</span>' : ''} ${u.is_banned ? '<span class="chip red">BANNED</span>' : ''}</span></div>
       <div class="meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
       <div class="row" style="margin-top:8px">
-        ${u.id !== ME.id ? `
-          <button class="btn tiny ${u.is_banned ? 'ghost' : 'danger'}" data-uban="${u.id}" data-banned="${u.is_banned}">${u.is_banned ? 'UNBAN' : 'BAN'}</button>
-          <button class="btn tiny danger" data-udelete="${u.id}">DELETE</button>
-        ` : '<span style="color:var(--gold);font-size:10px">YOU</span>'}
+        ${u.id !== ME.id ? `<button class="btn tiny ${u.is_banned ? 'ghost' : 'danger'}" data-uban="${u.id}" data-banned="${u.is_banned}">${u.is_banned ? 'UNBAN' : 'BAN'}</button>
+        <button class="btn tiny danger" data-udelete="${u.id}">DELETE</button>` : '<span style="color:var(--gold);font-size:10px">YOU</span>'}
       </div>
-    </div>`;
-  }).join('') || '<div style="color:var(--muted);font-size:11px">No users</div>';
-
+    </div>`).join('') || '<div style="color:var(--muted);font-size:11px">No users</div>';
   document.querySelectorAll('[data-uban]').forEach(b => {
     b.addEventListener('click', async () => {
       const currentlyBanned = b.dataset.banned === 'true';
@@ -1303,7 +1515,7 @@ async function loadAdminUsers() {
   });
   document.querySelectorAll('[data-udelete]').forEach(b => {
     b.addEventListener('click', async () => {
-      if (!confirm('DELETE user and all their data? Cannot be undone.')) return;
+      if (!confirm('DELETE user?')) return;
       await sb.from('profiles').delete().eq('id', b.dataset.udelete);
       toast('User deleted', 'ok');
       loadAdminUsers();
@@ -1320,11 +1532,9 @@ async function loadAdminPubMsgs() {
       <button class="btn tiny danger" data-pdel="${m.id}">DELETE</button>
     </div>
   `).join('') || '<div style="color:var(--muted);font-size:11px">No messages</div>';
-
   document.querySelectorAll('[data-pdel]').forEach(b => {
     b.addEventListener('click', async () => {
-      const { error } = await sb.from('public_messages').delete().eq('id', b.dataset.pdel);
-      if (error) { toast(error.message, 'err'); return; }
+      await sb.from('public_messages').delete().eq('id', b.dataset.pdel);
       toast('Message deleted', 'ok');
       loadAdminPubMsgs(); loadPublicChat();
     });
@@ -1335,7 +1545,7 @@ async function loadAdminPubMsgs() {
    REALTIME
    ============================================================ */
 function setupRealtime() {
-  [chatChannel, listChannel, pubChannel].forEach(c => { if (c) sb.removeChannel(c); });
+  [chatChannel, listChannel, pubChannel, orderChannel].forEach(c => { if (c) sb.removeChannel(c); });
 
   chatChannel = sb.channel('rt-messages-' + ME.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -1347,8 +1557,20 @@ function setupRealtime() {
       if (ACTIVE_CHAT) loadMessages();
       loadChats();
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
-      loadOrders(); if (ME.role === 'admin') loadAdminOrders();
+    .subscribe();
+
+  orderChannel = sb.channel('rt-orders-' + ME.id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, async payload => {
+      const updated = payload.new;
+      if (ACTIVE_CHAT && ACTIVE_ORDER && updated.id === ACTIVE_ORDER.id) {
+        // Reload order object
+        const { data: od } = await sb.from('orders').select('*').eq('id', updated.id).single();
+        if (od) ACTIVE_ORDER = od;
+        renderChatActions();
+        loadMessages();
+      }
+      loadOrders();
+      if (ME.role === 'admin') loadAdminOrders();
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'orders' }, () => {
       loadOrders(); if (ME.role === 'admin') loadAdminOrders();
@@ -1372,8 +1594,7 @@ function setupRealtime() {
       if (ME.role === 'admin' && $('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
-      loadSettings();
-      loadPublicChat();
+      loadSettings(); loadPublicChat();
     })
     .subscribe();
 }
