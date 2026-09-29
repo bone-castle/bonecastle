@@ -29,53 +29,47 @@
   body{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
   body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     background:
-      radial-gradient(circle at 50% -20%,rgba(212,175,55,0.06),transparent 50%),
-      radial-gradient(circle at 0% 100%,rgba(255,255,255,0.02),transparent 40%)}
+      radial-gradient(circle at 50% -20%,rgba(255,255,255,0.02),transparent 50%),
+      radial-gradient(circle at 0% 100%,rgba(255,255,255,0.015),transparent 40%)}
   ::-webkit-scrollbar{width:4px;height:4px}
   ::-webkit-scrollbar-track{background:var(--bg)}
   ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
   .logo-img{display:block;object-fit:contain}
-  #splash{position:fixed;inset:0;background:var(--bg);z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
-    transition:opacity .5s,visibility .5s}
-  #splash.hide{opacity:0;visibility:hidden}
-  #splash .logo-img{width:150px;height:150px;animation:splashPulse 2s ease-in-out infinite;
-    filter:drop-shadow(0 0 24px rgba(212,175,55,0.5))}
-  @keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.9}}
-  .splash-bar{width:120px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
-  .splash-bar::after{content:'';display:block;height:100%;width:40%;background:var(--gold);
-    animation:splashBar 1.2s ease-in-out infinite}
-  @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-  .splash-text{font-family:var(--display);font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase}
-  #authScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;z-index:1}
+
+  /* ============ AUTH SCREEN — DARKER, NO GOLD (except button) ============ */
+  #authScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;z-index:1;
+    background:#000}
   #authScreen.on{display:flex}
-  .auth-card{width:min(420px,92vw);background:var(--panel);border:1px solid var(--line2);
+  .auth-card{width:min(420px,92vw);background:#050505;border:1px solid #1a1a1a;
     border-radius:20px;padding:32px 26px;position:relative;overflow:hidden;
-    animation:cardIn .6s cubic-bezier(.2,.9,.3,1.1)}
-  @keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    box-shadow:0 20px 60px rgba(0,0,0,0.9);
+    animation:cardIn .5s cubic-bezier(.2,.9,.3,1.05)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
   .auth-card::before{content:'';position:absolute;inset:0;
-    background:radial-gradient(circle at 50% 0%,rgba(212,175,55,0.08),transparent 55%);pointer-events:none}
+    background:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.03),transparent 55%);pointer-events:none}
   .auth-logo{text-align:center;margin-bottom:26px;position:relative;z-index:1}
   .auth-logo .logo-img{width:140px;height:140px;margin:0 auto 12px;
-    filter:drop-shadow(0 0 20px rgba(212,175,55,0.4));animation:logoFloat 4s ease-in-out infinite}
+    filter:drop-shadow(0 0 14px rgba(255,255,255,0.06));
+    animation:logoFloat 4s ease-in-out infinite}
   @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   .auth-logo h1{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:8px;
     color:var(--white);margin-bottom:4px;
-    background:linear-gradient(180deg,#fff,#aaa);
+    background:linear-gradient(180deg,#fff,#999);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
   .auth-logo .divider{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
-  .auth-logo .divider-line{width:30px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
-  .auth-logo .divider-line:last-child{background:linear-gradient(90deg,var(--gold),transparent)}
-  .auth-logo .divider-dot{width:4px;height:4px;background:var(--gold);border-radius:50%;box-shadow:0 0 8px var(--gold)}
+  .auth-logo .divider-line{width:30px;height:1px;background:linear-gradient(90deg,transparent,#555)}
+  .auth-logo .divider-line:last-child{background:linear-gradient(90deg,#555,transparent)}
+  .auth-logo .divider-dot{width:4px;height:4px;background:#888;border-radius:50%;
+    box-shadow:0 0 6px rgba(255,255,255,0.35)}
   .auth-logo p{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-top:8px}
   .field{margin-bottom:14px;position:relative;z-index:1}
   .field label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);
     margin-bottom:7px;text-transform:uppercase;font-weight:600}
-  .field input,.field textarea,.field select{width:100%;background:var(--panel2);
-    border:1.5px solid var(--line);color:var(--text);padding:13px 15px;border-radius:11px;
+  .field input,.field textarea,.field select{width:100%;background:#0a0a0a;
+    border:1.5px solid #1e1e1e;color:var(--text);padding:13px 15px;border-radius:11px;
     font-size:14px;font-family:inherit;outline:none;transition:all .2s}
   .field input:focus,.field textarea:focus,.field select:focus{
-    border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.1)}
+    border-color:#5a5a5a;box-shadow:0 0 0 3px rgba(255,255,255,0.05)}
   .auth-result{
     display:none;margin-top:14px;padding:11px 13px;border-radius:11px;
     font-size:11.5px;font-weight:700;letter-spacing:.5px;line-height:1.55;
@@ -106,19 +100,23 @@
     font-size:10.5px;color:var(--muted);text-align:center;
     margin-top:14px;line-height:1.6;letter-spacing:.3px;
   }
-  .auth-hint b{color:var(--gold);font-weight:700}
+  .auth-hint b{color:var(--white);font-weight:700}
+  /* ==================================================================== */
+
   .btn{width:100%;padding:15px;border-radius:11px;border:none;
     background:linear-gradient(180deg,#fff,#e8e8e8);color:#000;font-size:12px;
     font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
     transition:all .2s;font-family:inherit}
   .btn:active{transform:scale(.98)}
   .btn:disabled{opacity:.4;cursor:not-allowed}
+  /* ONLY button keeps the gold — everything else on auth page is dark */
   .btn.gold{background:linear-gradient(180deg,var(--gold),#a88428);color:#000}
   .btn.danger{background:linear-gradient(180deg,#ff3b3b,#b91c1c);color:#fff}
   .btn.ghost{background:transparent;color:var(--text);border:1.5px solid var(--line2)}
   .btn.small{padding:8px 14px;font-size:10px;width:auto}
   .btn.tiny{padding:6px 10px;font-size:9px;width:auto;letter-spacing:1px}
   .auth-err{color:var(--red);font-size:11px;margin-top:10px;text-align:center;min-height:14px}
+
   #appScreen{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1}
   #appScreen.on{display:flex}
   header{background:rgba(5,5,5,.92);backdrop-filter:blur(20px);
@@ -411,11 +409,7 @@
 </head>
 <body>
 
-<div id="splash">
-  <img class="logo-img" id="splashLogo" alt="BONECASTLE">
-  <div class="splash-bar"></div>
-  <div class="splash-text">Loading...</div>
-</div>
+<!-- Splash screen removed -->
 
 <div id="authScreen">
   <div class="auth-card">
@@ -771,7 +765,6 @@ async function handleAuthSubmit() {
   const resetBtn = () => { btn.disabled = false; btn.textContent = 'Enter'; };
 
   try {
-    // 1) Try to sign in as existing user
     const { error: signinErr } = await sb.auth.signInWithPassword({
       email: usernameToEmail(u),
       password: p
@@ -783,7 +776,6 @@ async function handleAuthSubmit() {
       return;
     }
 
-    // 2) Sign-in failed → check if username is available
     btn.textContent = 'VERIFYING...';
     const { data: available, error: rpcErr } = await sb.rpc('check_username_available', { uname: u });
 
@@ -793,7 +785,6 @@ async function handleAuthSubmit() {
       return;
     }
 
-    // 2a) Username already taken → wrong password OR someone else's name
     if (available === false) {
       showAuthResult(
         '✕ Username "' + u + '" is already taken — try another name. ' +
@@ -804,7 +795,6 @@ async function handleAuthSubmit() {
       return;
     }
 
-    // 3) Username available → create account
     btn.textContent = 'CREATING...';
     const { data, error: signupErr } = await sb.auth.signUp({
       email: usernameToEmail(u),
@@ -1165,7 +1155,6 @@ async function openChat(chatId, listing) {
   if (img) {
     $('chatThumb').innerHTML = `<img src="${esc(img)}" alt="">`;
   } else {
-    // DM placeholder
     const partnerId = ME.role === 'admin' ? (chatRow?.buyer_id) : null;
     const partner = partnerId ? getProfile(partnerId) : (ME.role === 'admin' ? null : findAnyAdmin());
     const initial = (partner?.username || '?').slice(0,1).toUpperCase();
@@ -1181,7 +1170,6 @@ async function openChat(chatId, listing) {
   if (ACTIVE_ORDER && !ACTIVE_ORDER.details_status) ACTIVE_ORDER.details_status = 'none';
   if (ACTIVE_ORDER && !ACTIVE_ORDER.buyer_confirmation) ACTIVE_ORDER.buyer_confirmation = 'none';
 
-  // Partner id for header display
   if (ME.role === 'admin') {
     ACTIVE_CHAT_PARTNER_ID = ACTIVE_ORDER?.buyer_id || chatRow?.buyer_id || null;
   } else {
@@ -1219,13 +1207,12 @@ function refreshChatHeaderPresence() {
 }
 
 /* ============================================================
-   NEW: ADMIN → DIRECT CHAT WITH ANY USER
+   ADMIN → DIRECT CHAT
    ============================================================ */
 async function openDirectChat(targetUserId, targetUsername) {
   if (ME.role !== 'admin') { toast('Admin only', 'warn'); return; }
   if (!targetUserId) return;
 
-  // Try to find an existing direct chat with this user
   const { data: existingArr, error: findErr } = await sb.from('chats')
     .select('*')
     .eq('chat_type', 'direct')
@@ -1244,7 +1231,6 @@ async function openDirectChat(targetUserId, targetUsername) {
     chat = newChat;
   }
 
-  // Switch to Chats tab + reload list
   document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.remove('active'));
   const chatTabBtn = document.querySelector('.tab[data-view="chats"]');
   if (chatTabBtn) chatTabBtn.classList.add('active');
@@ -1257,7 +1243,7 @@ async function openDirectChat(targetUserId, targetUsername) {
 window.openDirectChat = openDirectChat;
 
 /* ============================================================
-   CHAT ACTIONS (order-related; only shown for listing chats)
+   CHAT ACTIONS
    ============================================================ */
 function renderChatActions() {
   const box = $('chatActions');
@@ -2099,7 +2085,6 @@ function setupRealtime() {
     })
     .subscribe();
 
-  /* NEW: watch chats INSERT / UPDATE / DELETE so new direct chats appear instantly */
   chatsListChannel = sb.channel('rt-chats-' + ME.id)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
       loadChats();
@@ -2163,10 +2148,9 @@ function setupRealtime() {
 }
 
 /* ============================================================
-   INIT
+   INIT  (splash removed — no setTimeout)
    ============================================================ */
 applyLogo();
-setTimeout(() => { $('splash').classList.add('hide'); }, 900);
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { $('authScreen').classList.add('on'); $('appScreen').classList.remove('on'); }
