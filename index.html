@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BONECASTLE // Market</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#050505;--panel:#0d0d0d;--panel2:#141414;--panel3:#1a1a1a;
+    --line:#242424;--line2:#2e2e2e;
+    --text:#e8e8e8;--white:#fff;--muted:#888;--dim:#4a4a4a;
+    --green:#00ff66;--green-dim:rgba(0,255,102,0.08);
+    --red:#ff3b3b;--red-dim:rgba(255,59,59,0.08);
+    --yellow:#ffb800;--yellow-dim:rgba(255,184,0,0.08);
+    --blue:#00d4ff;--blue-dim:rgba(0,212,255,0.08);
+    --gold:#d4af37;
+    --mono:'JetBrains Mono',monospace;
+    --display:'Cinzel',serif;
+    --sans:'Inter',-apple-system,sans-serif;
+  }
+  html,body{height:100%;min-height:100vh;background:var(--bg);color:var(--text);
+    font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  body{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 50% -20%,rgba(212,175,55,0.06),transparent 50%),
+      radial-gradient(circle at 0% 100%,rgba(255,255,255,0.02),transparent 40%),
+      radial-gradient(circle at 100% 100%,rgba(255,255,255,0.02),transparent 40%)}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+
+  /* ===== LOGO IMG ===== */
+  .logo-img{display:block;object-fit:contain}
+
+  /* ===== SPLASH ===== */
+  #splash{position:fixed;inset:0;background:var(--bg);z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+    transition:opacity .5s,visibility .5s}
+  #splash.hide{opacity:0;visibility:hidden}
+  #splash .logo-img{width:150px;height:150px;
+    animation:splashPulse 2s ease-in-out infinite;
+    filter:drop-shadow(0 0 24px rgba(212,175,55,0.5))}
+  @keyframes splashPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.9}}
+  .splash-bar{width:120px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
+  .splash-bar::after{content:'';display:block;height:100%;width:40%;background:var(--gold);
+    animation:splashBar 1.2s ease-in-out infinite}
+  @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+  .splash-text{font-family:var(--display);font-size:11px;letter-spacing:4px;
+    color:var(--muted);text-transform:uppercase}
+
+  /* ===== AUTH ===== */
+  #authScreen{display:none;align-items:center;justify-content:center;min-height:100vh;
+    padding:20px;position:relative;z-index:1}
+  #authScreen.on{display:flex}
+  .auth-card{width:min(420px,92vw);background:var(--panel);border:1px solid var(--line2);
+    border-radius:20px;padding:32px 26px;position:relative;overflow:hidden;
+    animation:cardIn .6s cubic-bezier(.2,.9,.3,1.1)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.96)}
+    to{opacity:1;transform:translateY(0) scale(1)}}
+  .auth-card::before{content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 0%,rgba(212,175,55,0.08),transparent 55%);
+    pointer-events:none}
+  .auth-logo{text-align:center;margin-bottom:26px;position:relative;z-index:1}
+  .auth-logo .logo-img{width:140px;height:140px;margin:0 auto 12px;
+    filter:drop-shadow(0 0 20px rgba(212,175,55,0.4));
+    animation:logoFloat 4s ease-in-out infinite}
+  @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .auth-logo h1{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:8px;
+    color:var(--white);margin-bottom:4px;
+    background:linear-gradient(180deg,#fff,#aaa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .auth-logo .divider{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+  .auth-logo .divider-line{width:30px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .auth-logo .divider-line:last-child{background:linear-gradient(90deg,var(--gold),transparent)}
+  .auth-logo .divider-dot{width:4px;height:4px;background:var(--gold);border-radius:50%;
+    box-shadow:0 0 8px var(--gold)}
+  .auth-logo p{font-size:9px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-top:8px}
+  .auth-tabs{display:flex;background:var(--panel2);border-radius:12px;padding:4px;
+    margin-bottom:20px;position:relative;z-index:1}
+  .auth-tab{flex:1;padding:11px;text-align:center;font-size:11px;font-weight:600;
+    letter-spacing:1.5px;color:var(--muted);border-radius:9px;cursor:pointer;
+    transition:all .25s;text-transform:uppercase;border:none;background:transparent;font-family:inherit}
+  .auth-tab.active{background:var(--panel3);color:var(--white);box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+  .field{margin-bottom:14px;position:relative;z-index:1}
+  .field label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);
+    margin-bottom:7px;text-transform:uppercase;font-weight:600}
+  .field input,.field textarea,.field select{width:100%;background:var(--panel2);
+    border:1.5px solid var(--line);color:var(--text);padding:13px 15px;border-radius:11px;
+    font-size:14px;font-family:inherit;outline:none;transition:all .2s}
+  .field input:focus,.field textarea:focus,.field select:focus{
+    border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.1)}
+  .btn{width:100%;padding:15px;border-radius:11px;border:none;
+    background:linear-gradient(180deg,#fff,#e8e8e8);color:#000;font-size:12px;
+    font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+    transition:all .2s;font-family:inherit}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.gold{background:linear-gradient(180deg,var(--gold),#a88428);color:#000}
+  .btn.danger{background:linear-gradient(180deg,#ff3b3b,#b91c1c);color:#fff}
+  .btn.ghost{background:transparent;color:var(--text);border:1.5px solid var(--line2)}
+  .btn.small{padding:8px 14px;font-size:10px;width:auto}
+  .btn.tiny{padding:6px 10px;font-size:9px;width:auto;letter-spacing:1px}
+  .auth-err{color:var(--red);font-size:11px;margin-top:10px;text-align:center;min-height:14px}
+
+  /* ===== APP ===== */
+  #appScreen{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+  #appScreen.on{display:flex}
+  header{background:rgba(5,5,5,.92);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--line);padding:12px 14px;
+    padding-top:calc(12px + env(safe-area-inset-top));
+    position:sticky;top:0;z-index:100;display:flex;flex-direction:column;gap:10px}
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:2.5px;
+    font-size:12px;font-family:var(--display)}
+  .brand .logo-img{width:38px;height:38px;flex-shrink:0;
+    border-radius:8px;overflow:hidden;
+    filter:drop-shadow(0 0 6px rgba(212,175,55,0.35))}
+  .brand span{color:var(--white)}
+  .user-badge{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)}
+  .user-badge b{color:var(--white);font-weight:600}
+  .user-badge .role{background:var(--green-dim);color:var(--green);
+    border:1px solid rgba(0,255,102,0.3);padding:2px 7px;border-radius:10px;
+    font-size:9px;font-weight:700;letter-spacing:1px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex-shrink:0;padding:9px 14px;font-size:10px;font-weight:600;letter-spacing:1.2px;
+    background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:20px;
+    cursor:pointer;text-transform:uppercase;font-family:inherit;transition:all .25s;white-space:nowrap}
+  .tab.active{background:var(--white);color:#000;border-color:var(--white);box-shadow:0 0 12px rgba(255,255,255,0.15)}
+  .tab:active{transform:scale(.96)}
+  main{flex:1;max-width:680px;width:100%;margin:0 auto;padding:18px 14px 40px}
+  .view{display:none;animation:viewIn .4s cubic-bezier(.2,.9,.3,1)}
+  .view.active{display:block}
+  @keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ===== LISTINGS ===== */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(min-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .listing-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;cursor:pointer;transition:all .3s;animation:cardFade .5s backwards;
+    position:relative}
+  @keyframes cardFade{from{opacity:0;transform:translateY(10px) scale(.98)}
+    to{opacity:1;transform:translateY(0) scale(1)}}
+  .listing-card:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+  .listing-card:active{transform:scale(.97)}
+  .listing-img{aspect-ratio:1;background:var(--panel2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .listing-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+  .listing-card:hover .listing-img img{transform:scale(1.05)}
+  .listing-img .no-img{font-size:9px;color:var(--dim);letter-spacing:1px}
+  .listing-info{padding:11px}
+  .listing-title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:5px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+  .listing-price{font-size:13px;font-weight:700;color:var(--gold);font-family:var(--mono)}
+
+  /* ===== CHATS ===== */
+  .chat-item{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px;margin-bottom:8px;cursor:pointer;transition:all .25s;display:flex;gap:11px;align-items:center}
+  .chat-item:active{background:var(--panel2);transform:scale(.99)}
+  .chat-thumb{width:48px;height:48px;border-radius:10px;background:var(--panel2);overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+  .chat-thumb img{width:100%;height:100%;object-fit:cover}
+  .chat-meta{flex:1;min-width:0}
+  .chat-meta .title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-meta .preview{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-meta .time{font-size:9px;color:var(--dim);letter-spacing:.5px;margin-top:3px}
+
+  /* ===== ORDERS ===== */
+  .order-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px;margin-bottom:10px;animation:cardFade .5s backwards}
+  .order-header{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .order-id{font-size:11px;font-weight:700;color:var(--white);font-family:var(--mono)}
+  .order-status{font-size:9px;padding:3px 9px;border-radius:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .status-pending{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(255,184,0,0.3)}
+  .status-confirmed{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(0,212,255,0.3)}
+  .status-shipped{background:rgba(168,132,40,0.15);color:var(--gold);border:1px solid rgba(212,175,55,0.4)}
+  .status-delivered,.status-completed{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,255,102,0.3)}
+  .status-cancelled{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,59,59,0.3)}
+  .order-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;gap:10px}
+  .order-row .k{color:var(--muted);flex-shrink:0}
+  .order-row .v{color:var(--text);font-family:var(--mono);text-align:right;word-break:break-word}
+
+  /* ===== PUBLIC CHAT ===== */
+  .pubchat-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    display:flex;flex-direction:column;height:calc(100vh - 220px);min-height:400px}
+  .pubchat-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .pubchat-head .title{font-size:12px;font-weight:700;letter-spacing:1.5px;
+    color:var(--white);text-transform:uppercase;font-family:var(--display)}
+  .pubchat-head .meta{font-size:10px;color:var(--muted)}
+  .pubchat-head .online-dot{width:6px;height:6px;background:var(--green);border-radius:50%;
+    box-shadow:0 0 8px var(--green);display:inline-block;margin-right:5px;
+    animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .pubchat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .pubmsg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:12.5px;
+    line-height:1.45;word-break:break-word;animation:msgIn .3s;position:relative}
+  @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .pubmsg.mine{align-self:flex-end;background:linear-gradient(180deg,#fff,#e5e5e5);color:#000;border-bottom-right-radius:4px}
+  .pubmsg.other{align-self:flex-start;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .pubmsg .meta{font-size:9px;opacity:.65;margin-top:4px;letter-spacing:.4px}
+  .pubmsg .meta .name{font-weight:700;color:var(--gold)}
+  .pubmsg.mine .meta .name{color:#333}
+  .pubmsg .pub-del-btn{
+    position:absolute;top:-6px;right:-6px;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--red);color:#fff;border:2px solid var(--panel);
+    font-size:12px;font-weight:900;line-height:1;
+    cursor:pointer;display:grid;place-items:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
+    transition:all .15s;
+  }
+  .pubmsg .pub-del-btn:active{transform:scale(.85)}
+  .pubmsg.mine .pub-del-btn{left:-6px;right:auto}
+  .pubchat-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);align-items:center}
+  .pubchat-input-row input{flex:1;background:var(--panel2);border:1.5px solid var(--line);
+    color:var(--text);padding:11px 16px;border-radius:22px;font-size:13px;
+    font-family:inherit;outline:none;transition:border-color .2s}
+  .pubchat-input-row input:focus{border-color:var(--white)}
+  .pubchat-input-row input:disabled{opacity:.4;cursor:not-allowed}
+  .pubchat-input-row button{background:var(--white);color:#000;border:none;width:42px;height:42px;
+    border-radius:50%;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:all .2s}
+  .pubchat-input-row button:active{transform:scale(.92)}
+  .pubchat-input-row button:disabled{opacity:.3;cursor:not-allowed}
+  .pubchat-input-row button svg{width:16px;height:16px;stroke:#000;fill:none;stroke-width:2.5}
+
+  /* ===== ADMIN ===== */
+  .admin-section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-bottom:14px;animation:cardFade .5s}
+  .admin-section h3{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--white);
+    margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:9px;
+    font-family:var(--display);justify-content:space-between}
+  .admin-section h3 .left{display:flex;align-items:center;gap:9px}
+  .admin-section h3 .left::before{content:'';width:3px;height:12px;
+    background:linear-gradient(180deg,var(--gold),#a88428);border-radius:2px}
+  .admin-section h3 .toggle{font-size:9px;color:var(--gold);cursor:pointer;
+    font-family:var(--mono);letter-spacing:1px}
+  .img-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .img-preview .prev{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .img-preview .prev img{width:100%;height:100%;object-fit:cover}
+  .user-item,.admin-order,.admin-listing,.admin-msg{
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:11px;margin-bottom:8px;font-size:11px}
+  .user-item .name{color:var(--white);font-weight:600;font-size:12px;margin-bottom:3px;
+    display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .user-item .meta{color:var(--muted);font-size:10px}
+  .admin-order .hdr{display:flex;justify-content:space-between;margin-bottom:6px;
+    align-items:center;gap:8px}
+  .admin-order .hdr b{color:var(--white);font-size:11.5px}
+  .admin-order .info{color:var(--muted);font-size:10px;margin-bottom:8px;line-height:1.6}
+  .admin-order .info b{color:var(--text)}
+  .admin-order .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .admin-listing{display:flex;gap:10px;align-items:center}
+  .admin-listing .thumb{width:44px;height:44px;border-radius:8px;overflow:hidden;
+    background:var(--panel3);flex-shrink:0;border:1px solid var(--line)}
+  .admin-listing .thumb img{width:100%;height:100%;object-fit:cover}
+  .admin-listing .body{flex:1;min-width:0}
+  .admin-listing .body b{color:var(--white);font-size:11.5px;display:block;margin-bottom:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .admin-listing .body small{color:var(--muted);font-size:10px}
+  .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;
+    color:var(--muted);font-size:10px}
+  .admin-msg .hdr b{color:var(--gold)}
+  .admin-msg .txt{color:var(--text);font-size:11px;line-height:1.5;
+    word-break:break-word;margin-bottom:6px}
+
+  /* ===== MODALS ===== */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+    z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
+  .modal.active{display:flex}
+  .modal-content{background:var(--panel);border:1px solid var(--line2);
+    border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;
+    padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));
+    animation:slideUp .35s cubic-bezier(.2,.9,.3,1)}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @media(min-width:640px){.modal{align-items:center;padding:20px}.modal-content{border-radius:20px}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .modal-title{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--white);
+    text-transform:uppercase;font-family:var(--display)}
+  .modal-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1;padding:0 4px}
+  .modal-close:hover{color:var(--white)}
+
+  /* ===== CHAT MODAL ===== */
+  #chatModal .modal-content{max-height:95vh;display:flex;flex-direction:column;padding-bottom:0}
+  .chat-header{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .chat-header .thumb{width:40px;height:40px;border-radius:9px;background:var(--panel2);
+    overflow:hidden;flex-shrink:0;border:1px solid var(--line)}
+  .chat-header .thumb img{width:100%;height:100%;object-fit:cover}
+  .chat-header .info{flex:1;min-width:0}
+  .chat-header .name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-header .sub{font-size:10px;color:var(--muted);margin-top:2px}
+  .messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:9px;min-height:200px}
+  .msg{max-width:78%;padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word;animation:msgIn .3s;position:relative}
+  .msg.buyer{align-self:flex-end;background:linear-gradient(180deg,#fff,#e5e5e5);color:#000;border-bottom-right-radius:4px}
+  .msg.admin{align-self:flex-start;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg .meta{font-size:9px;opacity:.6;margin-top:4px;letter-spacing:.5px}
+  .msg.buyer .meta{text-align:right}
+  .msg .msg-del-btn{
+    position:absolute;top:-6px;right:-6px;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--red);color:#fff;border:2px solid var(--panel);
+    font-size:12px;font-weight:900;line-height:1;cursor:pointer;
+    display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,0.4);
+    transition:all .15s;
+  }
+  .msg.buyer .msg-del-btn{left:-6px;right:auto}
+  .msg .msg-del-btn:active{transform:scale(.85)}
+  .chat-input-row{display:flex;gap:8px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);background:var(--panel);margin:0 -18px;padding-left:18px;padding-right:18px;align-items:center}
+  .chat-input-row input{flex:1;background:var(--panel2);border:1.5px solid var(--line);
+    color:var(--text);padding:12px 16px;border-radius:24px;font-size:14px;font-family:inherit;outline:none}
+  .chat-input-row input:focus{border-color:var(--white)}
+  .chat-input-row button{background:var(--white);color:#000;border:none;width:44px;height:44px;
+    border-radius:50%;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:all .2s}
+  .chat-input-row button:active{transform:scale(.92)}
+  .chat-input-row button svg{width:17px;height:17px;stroke:#000;fill:none;stroke-width:2.5}
+
+  /* ===== DETAIL ===== */
+  .detail-imgs{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none;scroll-snap-type:x mandatory}
+  .detail-imgs::-webkit-scrollbar{display:none}
+  .detail-imgs img{width:75%;max-width:300px;aspect-ratio:1;object-fit:cover;border-radius:14px;flex-shrink:0;border:1px solid var(--line);scroll-snap-align:center}
+  .detail-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.3;font-family:var(--display)}
+  .detail-price{font-size:22px;font-weight:800;color:var(--gold);margin-bottom:16px;font-family:var(--mono)}
+  .detail-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:20px;white-space:pre-wrap;word-break:break-word}
+  .cod-info{background:var(--green-dim);border:1px solid rgba(0,255,102,0.25);
+    border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:11.5px;
+    color:var(--text);line-height:1.6}
+  .cod-info b{color:var(--green)}
+
+  /* ===== TOAST ===== */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,140px);
+    background:var(--panel3);border:1px solid var(--line2);color:var(--text);
+    padding:12px 22px;border-radius:12px;font-size:12px;z-index:2000;
+    transition:transform .4s cubic-bezier(.2,.9,.3,1.1);box-shadow:0 12px 40px rgba(0,0,0,.75);
+    max-width:88vw;text-align:center;font-weight:500}
+  .toast.on{transform:translate(-50%,0)}
+  .toast.ok{border-color:rgba(0,255,102,.5);color:var(--green)}
+  .toast.err{border-color:rgba(255,59,59,.5);color:var(--red)}
+  .toast.warn{border-color:rgba(255,184,0,.5);color:var(--yellow)}
+
+  /* ===== UTILS ===== */
+  .empty{text-align:center;padding:50px 20px;color:var(--dim);font-size:12px}
+  .empty svg{width:36px;height:36px;stroke:var(--dim);fill:none;stroke-width:1.5;margin-bottom:12px}
+  .loading{text-align:center;padding:30px;color:var(--muted);font-size:11px;letter-spacing:2px}
+  .ornament{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px 0;opacity:.4}
+  .ornament-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .ornament-line:last-child{background:linear-gradient(90deg,var(--gold),transparent)}
+  .ornament-diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 8px rgba(212,175,55,.5)}
+  .chip{display:inline-block;padding:3px 8px;border-radius:6px;font-size:9px;
+    font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    background:var(--panel3);border:1px solid var(--line2);color:var(--muted)}
+  .chip.green{background:var(--green-dim);color:var(--green);border-color:rgba(0,255,102,0.3)}
+  .chip.red{background:var(--red-dim);color:var(--red);border-color:rgba(255,59,59,0.3)}
+  .chip.gold{background:rgba(212,175,55,0.1);color:var(--gold);border-color:rgba(212,175,55,0.3)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  * { touch-action: manipulation; }
+</style>
+</head>
+<body>
+
+<!-- ============ SPLASH ============ -->
+<div id="splash">
+  <img class="logo-img" id="splashLogo" alt="BONECASTLE">
+  <div class="splash-bar"></div>
+  <div class="splash-text">Loading...</div>
+</div>
+
+<!-- ============ AUTH ============ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <img class="logo-img" id="authLogo" alt="BONECASTLE">
+      <h1>BONECASTLE</h1>
+      <div class="divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+      <p>Cash on Delivery Market</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="login">Login</button>
+      <button class="auth-tab" data-auth="signup">Sign Up</button>
+    </div>
+    <div id="loginForm">
+      <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="your username" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+      <button class="btn" id="loginBtn">Sign In</button>
+      <div class="auth-err" id="loginErr"></div>
+    </div>
+    <div id="signupForm" style="display:none">
+      <div class="field"><label>Username</label><input type="text" id="signupUser" placeholder="choose username" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label>Password</label><input type="password" id="signupPass" placeholder="min 6 characters"></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="signupPass2" placeholder="repeat password"></div>
+      <button class="btn gold" id="signupBtn">Create Account</button>
+      <div class="auth-err" id="signupErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appScreen">
+  <header>
+    <div class="top-row">
+      <div class="brand">
+        <img class="logo-img" id="headerLogo" alt="">
+        <span>BONECASTLE</span>
+      </div>
+      <div class="user-badge">
+        <span><b id="userDisplay">—</b></span>
+        <span class="role" id="roleBadge" style="display:none">ADMIN</span>
+        <button class="tab" id="logoutBtn" style="padding:6px 12px;font-size:9px">EXIT</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-view="market">🛒 Market</button>
+      <button class="tab" data-view="chats">💬 Chats <span id="chatUnread" style="display:none;background:var(--red);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;margin-left:4px"></span></button>
+      <button class="tab" data-view="orders">📦 Orders</button>
+      <button class="tab" data-view="pubchat">🌐 Public Chat</button>
+      <button class="tab" data-view="admin" id="adminTabBtn" style="display:none">⚙️ Admin</button>
+    </div>
+  </header>
+  <main>
+    <div class="view active" id="view-market">
+      <div id="listingsGrid" class="grid"></div>
+      <div id="marketEmpty" class="empty" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4v10l8 4 8-4V7z"/></svg>
+        <div>No listings available</div>
+      </div>
+      <div id="marketLoading" class="loading">LOADING</div>
+    </div>
+
+    <div class="view" id="view-chats">
+      <div id="chatsList"></div>
+      <div id="chatsEmpty" class="empty" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div>No conversations yet</div>
+      </div>
+    </div>
+
+    <div class="view" id="view-orders">
+      <div id="ordersList"></div>
+      <div id="ordersEmpty" class="empty" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <div>No orders yet</div>
+      </div>
+    </div>
+
+    <div class="view" id="view-pubchat">
+      <div class="pubchat-wrap">
+        <div class="pubchat-head">
+          <div class="title"><span class="online-dot"></span>Public Chat</div>
+          <div class="meta" id="pubchatCount">0 messages</div>
+        </div>
+        <div class="pubchat-body" id="pubchatBody"></div>
+        <div class="pubchat-input-row">
+          <input type="text" id="pubchatInput" placeholder="Type a message..." autocomplete="off" maxlength="500">
+          <button id="pubchatSendBtn">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-admin">
+      <div class="admin-section">
+        <h3><span class="left">Add Listing</span></h3>
+        <div class="field"><label>Title</label><input type="text" id="alTitle" maxlength="80" placeholder="Product name"></div>
+        <div class="field"><label>Description</label><textarea id="alDesc" rows="4" placeholder="Describe your product..."></textarea></div>
+        <div class="field"><label>Price (USD)</label><input type="number" id="alPrice" step="0.01" min="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Category</label><input type="text" id="alCat" placeholder="general"></div>
+        <div class="field"><label>Images (max 4)</label><input type="file" id="alImages" accept="image/*" multiple><div class="img-preview" id="imgPreview"></div></div>
+        <button class="btn gold" id="addListingBtn">Publish Listing</button>
+        <div class="auth-err" id="alErr"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3><span class="left">COD Delivery Info</span></h3>
+        <div class="field"><label>Full Name</label><input type="text" id="setFullName" placeholder="Your full name"></div>
+        <div class="field"><label>Phone</label><input type="text" id="setPhone" placeholder="+94 XX XXX XXXX"></div>
+        <div class="field"><label>Address</label><input type="text" id="setAddress" placeholder="Street address"></div>
+        <div class="field"><label>City</label><input type="text" id="setCity" placeholder="City"></div>
+        <div class="field"><label>Instructions</label><textarea id="setInstructions" rows="2" placeholder="Delivery instructions"></textarea></div>
+        <button class="btn gold" id="saveCodBtn">Save COD Info</button>
+      </div>
+
+      <div class="admin-section">
+        <h3><span class="left">Public Chat Control</span></h3>
+        <div class="row" style="margin-bottom:12px">
+          <button class="btn small gold" id="chatToggleBtn">Toggle ON/OFF</button>
+          <button class="btn small danger" id="chatClearBtn">Clear All Messages</button>
+          <button class="btn small ghost" id="chatLockBtn">Set Lock Message</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">
+          <div>Status: <span id="chatStatusLabel">—</span></div>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h3>
+          <span class="left">Listings (<span id="listingCount">0</span>)</span>
+          <span class="toggle" id="toggleListings">SHOW</span>
+        </h3>
+        <div id="adminListings" style="display:none"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>
+          <span class="left">Orders (<span id="orderCount">0</span>)</span>
+          <span class="toggle" id="toggleOrders">SHOW</span>
+        </h3>
+        <div id="adminOrders" style="display:none"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>
+          <span class="left">Users (<span id="userCount">0</span>)</span>
+          <span class="toggle" id="toggleUsers">SHOW</span>
+        </h3>
+        <div id="adminUsers" style="display:none"></div>
+      </div>
+
+      <div class="admin-section">
+        <h3>
+          <span class="left">Public Messages Moderation</span>
+          <span class="toggle" id="togglePubMsgs">SHOW</span>
+        </h3>
+        <div id="adminPubMsgs" style="display:none"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal" id="detailModal">
+  <div class="modal-content">
+    <div class="modal-head"><span class="modal-title">Product</span><button class="modal-close" data-close="detailModal">×</button></div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<div class="modal" id="chatModal">
+  <div class="modal-content">
+    <div class="chat-header">
+      <div class="thumb" id="chatThumb"></div>
+      <div class="info"><div class="name" id="chatName">—</div><div class="sub" id="chatSub">—</div></div>
+      <button class="modal-close" data-close="chatModal">×</button>
+    </div>
+    <div class="messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Type a message..." autocomplete="off">
+      <button id="chatSendBtn"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="checkoutModal">
+  <div class="modal-content">
+    <div class="modal-head"><span class="modal-title">Confirm Order (COD)</span><button class="modal-close" data-close="checkoutModal">×</button></div>
+    <div id="checkoutBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const SUPABASE_URL = 'https://ihyzyinqpvhlrqbkgsey.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_O_w7vzfNhn1smiLOooUy9A_qdU7XzIH';
+
+/* ============================================================
+   ⚠️ LOGO — Your Catbox URL
+   ============================================================ */
+const LOGO_URL = 'https://files.catbox.moe/8iv6s9.jpg';
+
+/* Apply logo */
+function applyLogo() {
+  document.querySelectorAll('.logo-img').forEach(img => {
+    img.src = LOGO_URL;
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let ME = { id: null, username: null, role: 'user', is_banned: false };
+let SETTINGS = {};
+let ACTIVE_CHAT = null;
+let ACTIVE_LISTING = null;
+let chatChannel = null;
+let listChannel = null;
+let pubChannel = null;
+let unreadCount = 0;
+let pubPollTimer = null;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function toast(msg, type) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (type || '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.className = 'toast ' + (type || ''), 3200);
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function timeAgo(iso) {
+  const d = new Date(iso), now = new Date();
+  const s = Math.floor((now - d) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return d.toLocaleDateString();
+}
+function openModal(id) { $(id).classList.add('active'); }
+function closeModal(id) { $(id).classList.remove('active'); }
+document.querySelectorAll('[data-close]').forEach(b => {
+  b.addEventListener('click', () => closeModal(b.dataset.close));
+});
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function usernameToEmail(u) { return u.toLowerCase().trim() + '@bonecastle.local'; }
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const mode = tab.dataset.auth;
+    $('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+    $('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
+  });
+});
+$('signupBtn').addEventListener('click', async () => {
+  const u = $('signupUser').value.trim();
+  const p = $('signupPass').value;
+  const p2 = $('signupPass2').value;
+  const err = $('signupErr'); err.textContent = '';
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(u)) { err.textContent = 'Username: 3-20 chars, letters/numbers/underscore only'; return; }
+  if (p.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
+  if (p !== p2) { err.textContent = 'Passwords do not match'; return; }
+  $('signupBtn').disabled = true; $('signupBtn').textContent = 'CREATING...';
+  try {
+    const { data, error } = await sb.auth.signUp({ email: usernameToEmail(u), password: p, options: { data: { username: u } } });
+    if (error) { err.textContent = error.message; return; }
+    if (data.user && !data.session) {
+      const r = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password: p });
+      if (r.error) { err.textContent = r.error.message; return; }
+    }
+    toast('Welcome to BONECASTLE', 'ok');
+  } catch (e) { err.textContent = e.message; }
+  finally { $('signupBtn').disabled = false; $('signupBtn').textContent = 'Create Account'; }
+});
+$('loginBtn').addEventListener('click', async () => {
+  const u = $('loginUser').value.trim();
+  const p = $('loginPass').value;
+  const err = $('loginErr'); err.textContent = '';
+  if (!u || !p) { err.textContent = 'Enter username and password'; return; }
+  $('loginBtn').disabled = true; $('loginBtn').textContent = 'SIGNING IN...';
+  const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(u), password: p });
+  $('loginBtn').disabled = false; $('loginBtn').textContent = 'Sign In';
+  if (error) { err.textContent = 'Invalid username or password'; return; }
+});
+$('logoutBtn').addEventListener('click', async () => {
+  if (pubPollTimer) clearInterval(pubPollTimer);
+  await sb.auth.signOut(); location.reload();
+});
+$('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('signupPass2').addEventListener('keydown', e => { if (e.key === 'Enter') $('signupBtn').click(); });
+
+/* ============================================================
+   SESSION
+   ============================================================ */
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session && session.user) {
+    try {
+      let { data: prof } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (!prof) {
+        await new Promise(r => setTimeout(r, 1500));
+        const retry = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+        prof = retry.data;
+      }
+      if (!prof) { toast('Profile error', 'err'); return; }
+      ME = { id: prof.id, username: prof.username, role: prof.role, is_banned: prof.is_banned };
+
+      if (ME.is_banned) { toast('Your account has been banned', 'err'); await sb.auth.signOut(); return; }
+
+      if (ME.role === 'admin') {
+        $('adminTabBtn').style.display = 'inline-block';
+        $('roleBadge').style.display = 'inline-block';
+      }
+      $('userDisplay').textContent = ME.username;
+      $('authScreen').classList.remove('on');
+      $('appScreen').classList.add('on');
+
+      await loadSettings();
+      await loadListings();
+      await loadChats();
+      await loadOrders();
+      await loadPublicChat();
+      if (ME.role === 'admin') await loadAdminData();
+
+      setupRealtime();
+      startPublicChatPolling();
+    } catch (e) { console.error(e); toast('Session error: ' + e.message, 'err'); }
+  } else {
+    $('authScreen').classList.add('on');
+    $('appScreen').classList.remove('on');
+    if (pubPollTimer) clearInterval(pubPollTimer);
+  }
+});
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+async function loadSettings() {
+  const { data } = await sb.from('settings').select('*');
+  SETTINGS = {};
+  (data || []).forEach(s => SETTINGS[s.key] = s.value);
+  if (ME.role === 'admin') {
+    $('setFullName').value = SETTINGS.cod_full_name || '';
+    $('setPhone').value = SETTINGS.cod_phone || '';
+    $('setAddress').value = SETTINGS.cod_address || '';
+    $('setCity').value = SETTINGS.cod_city || '';
+    $('setInstructions').value = SETTINGS.cod_instructions || '';
+    updateChatStatusUI();
+  }
+}
+function updateChatStatusUI() {
+  const enabled = SETTINGS.public_chat_enabled === 'true';
+  const label = $('chatStatusLabel');
+  if (label) {
+    label.textContent = enabled ? 'ENABLED' : 'SHUTDOWN';
+    label.style.color = enabled ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+document.querySelectorAll('.tab[data-view]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const v = tab.dataset.view;
+    document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+    $('view-' + v).classList.add('active');
+    if (v === 'chats') { unreadCount = 0; updateUnreadBadge(); loadChats(); }
+    if (v === 'orders') loadOrders();
+    if (v === 'pubchat') loadPublicChat();
+    if (v === 'admin') loadAdminData();
+  });
+});
+function updateUnreadBadge() {
+  const b = $('chatUnread');
+  if (unreadCount > 0) { b.textContent = unreadCount; b.style.display = 'inline-block'; }
+  else b.style.display = 'none';
+}
+
+/* ============================================================
+   LISTINGS
+   ============================================================ */
+async function loadListings() {
+  $('marketLoading').style.display = 'block';
+  const { data, error } = await sb.from('listings').select('*').eq('status', 'active').order('created_at', { ascending: false });
+  $('marketLoading').style.display = 'none';
+  if (error) { toast(error.message, 'err'); return; }
+  const grid = $('listingsGrid');
+  if (!data || !data.length) { grid.innerHTML = ''; $('marketEmpty').style.display = 'block'; return; }
+  $('marketEmpty').style.display = 'none';
+  grid.innerHTML = data.map((l, i) => {
+    const img = (l.images && l.images[0]) ? l.images[0] : '';
+    return `<div class="listing-card" data-id="${l.id}" style="animation-delay:${i * 0.05}s">
+      <div class="listing-img">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="no-img">NO IMAGE</span>'}</div>
+      <div class="listing-info">
+        <div class="listing-title">${esc(l.title)}</div>
+        <div class="listing-price">$${parseFloat(l.price_usd).toFixed(2)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.listing-card').forEach(c => {
+    c.addEventListener('click', () => {
+      const listing = data.find(x => x.id === c.dataset.id);
+      openListingDetail(listing);
+    });
+  });
+}
+
+function openListingDetail(listing) {
+  if (!listing) return;
+  ACTIVE_LISTING = listing;
+  const imgs = (listing.images && listing.images.length) ? listing.images : [];
+  $('detailBody').innerHTML = `
+    ${imgs.length ? `<div class="detail-imgs">${imgs.map(i => `<img src="${esc(i)}" alt="">`).join('')}</div>` : ''}
+    <div class="detail-title">${esc(listing.title)}</div>
+    <div class="detail-price">$${parseFloat(listing.price_usd).toFixed(2)}</div>
+    <div class="detail-desc">${esc(listing.description)}</div>
+    <div class="cod-info">
+      <b>💵 Cash on Delivery</b><br>
+      Pay in cash when your item is delivered. No advance payment required.
+    </div>
+    <div class="ornament"><div class="ornament-line"></div><div class="ornament-diamond"></div><div class="ornament-line"></div></div>
+    <button class="btn gold" id="buyNowBtn">📦 Order Now (COD)</button>
+  `;
+  $('buyNowBtn').addEventListener('click', () => startCheckout(listing));
+  openModal('detailModal');
+}
+
+async function startCheckout(listing) {
+  ACTIVE_LISTING = listing;
+  const { data: existing } = await sb.from('chats').select('*').eq('listing_id', listing.id).eq('buyer_id', ME.id).maybeSingle();
+  if (existing) { closeModal('detailModal'); openChat(existing.id, listing); return; }
+  $('checkoutBody').innerHTML = `
+    <div class="field"><label>Full Name</label><input type="text" id="coName" placeholder="Your name"></div>
+    <div class="field"><label>Phone Number</label><input type="text" id="coPhone" placeholder="+94 XX XXX XXXX"></div>
+    <div class="field"><label>Delivery Address</label><input type="text" id="coAddress" placeholder="Street address"></div>
+    <div class="field"><label>City</label><input type="text" id="coCity" placeholder="City"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="coNotes" rows="2" placeholder="Special instructions"></textarea></div>
+    <div class="cod-info" style="margin-bottom:14px">
+      <b>Total to pay on delivery:</b> $${parseFloat(listing.price_usd).toFixed(2)}
+    </div>
+    <button class="btn gold" id="coConfirm">Confirm Order</button>
+    <div class="auth-err" id="coErr"></div>
+  `;
+  $('coConfirm').addEventListener('click', async () => {
+    const name = $('coName').value.trim();
+    const phone = $('coPhone').value.trim();
+    const addr = $('coAddress').value.trim();
+    const city = $('coCity').value.trim();
+    const notes = $('coNotes').value.trim();
+    const err = $('coErr');
+    if (!name || !phone || !addr || !city) { err.textContent = 'All required fields must be filled'; return; }
+    $('coConfirm').disabled = true; $('coConfirm').textContent = 'PLACING ORDER...';
+    try {
+      const { data: newChat, error: chatErr } = await sb.from('chats').insert({ listing_id: listing.id, buyer_id: ME.id }).select().single();
+      if (chatErr) throw chatErr;
+      const { error: orderErr } = await sb.from('orders').insert({
+        listing_id: listing.id, buyer_id: ME.id, chat_id: newChat.id,
+        amount_usd: listing.price_usd, payment_method: 'COD',
+        delivery_status: 'pending',
+        delivery_full_name: name, delivery_phone: phone,
+        delivery_address: addr, delivery_city: city, delivery_notes: notes
+      });
+      if (orderErr) throw orderErr;
+      await sb.from('messages').insert({
+        chat_id: newChat.id, sender_id: ME.id, sender_role: 'buyer',
+        text: `📦 New COD Order for "${listing.title}" ($${listing.price_usd})\n\nName: ${name}\nPhone: ${phone}\nAddress: ${addr}, ${city}${notes ? '\nNotes: ' + notes : ''}`
+      });
+      closeModal('checkoutModal'); closeModal('detailModal');
+      toast('Order placed! Admin will contact you.', 'ok');
+      loadOrders(); loadChats();
+      setTimeout(() => openChat(newChat.id, listing), 400);
+    } catch (e) { err.textContent = e.message; }
+    finally { $('coConfirm').disabled = false; $('coConfirm').textContent = 'Confirm Order'; }
+  });
+  closeModal('detailModal');
+  openModal('checkoutModal');
+}
+
+/* ============================================================
+   CHATS
+   ============================================================ */
+async function loadChats() {
+  const { data, error } = await sb.from('chats')
+    .select('*, listings(title, images, price_usd), messages(text, created_at, sender_role)')
+    .order('last_message_at', { ascending: false });
+  if (error) { toast(error.message, 'err'); return; }
+  const wrap = $('chatsList');
+  if (!data || !data.length) { wrap.innerHTML = ''; $('chatsEmpty').style.display = 'block'; return; }
+  $('chatsEmpty').style.display = 'none';
+  wrap.innerHTML = data.map(c => {
+    const listing = c.listings || {};
+    const img = (listing.images && listing.images[0]) || '';
+    const lastMsg = (c.messages && c.messages[0]) ? c.messages[0].text : 'New conversation';
+    return `<div class="chat-item" data-chat="${c.id}">
+      <div class="chat-thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
+      <div class="chat-meta">
+        <div class="title">${esc(listing.title || 'Listing')}</div>
+        <div class="preview">${esc(lastMsg.slice(0, 60))}</div>
+        <div class="time">${timeAgo(c.last_message_at)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.chat-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const chat = data.find(x => x.id === el.dataset.chat);
+      openChat(chat.id, chat.listings);
+    });
+  });
+}
+async function openChat(chatId, listing) {
+  ACTIVE_CHAT = chatId;
+  $('chatName').textContent = listing?.title || 'Chat';
+  $('chatSub').textContent = ME.role === 'admin' ? 'Buyer conversation' : 'Seller';
+  const img = (listing?.images && listing.images[0]) || '';
+  $('chatThumb').innerHTML = img ? `<img src="${esc(img)}" alt="">` : '';
+  await loadMessages();
+  openModal('chatModal');
+  setTimeout(() => $('chatInput').focus(), 300);
+}
+async function loadMessages() {
+  if (!ACTIVE_CHAT) return;
+  const { data, error } = await sb.from('messages').select('*').eq('chat_id', ACTIVE_CHAT).order('created_at', { ascending: true });
+  if (error) { toast(error.message, 'err'); return; }
+  renderMessages(data || []);
+}
+function renderMessages(msgs) {
+  const box = $('chatMessages');
+  if (!msgs.length) { box.innerHTML = '<div style="text-align:center;color:var(--dim);font-size:11px;padding:20px">No messages yet</div>'; return; }
+  box.innerHTML = msgs.map(m => {
+    const delBtn = ME.role === 'admin' ? `<button class="msg-del-btn" data-msgdel="${m.id}" title="Delete">×</button>` : '';
+    return `<div class="msg ${m.sender_role}">
+      ${delBtn}
+      ${esc(m.text).replace(/\n/g, '<br>')}
+      <div class="meta">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+  box.querySelectorAll('[data-msgdel]').forEach(b => {
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this message?')) return;
+      await sb.from('messages').delete().eq('id', b.dataset.msgdel);
+      toast('Message deleted', 'ok');
+      loadMessages(); loadChats();
+    });
+  });
+}
+$('chatSendBtn').addEventListener('click', sendMessage);
+$('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+async function sendMessage() {
+  const text = $('chatInput').value.trim();
+  if (!text || !ACTIVE_CHAT) return;
+  $('chatInput').value = '';
+  await sb.from('messages').insert({
+    chat_id: ACTIVE_CHAT, sender_id: ME.id,
+    sender_role: ME.role === 'admin' ? 'admin' : 'buyer', text: text
+  });
+  loadMessages();
+}
+
+/* ============================================================
+   ORDERS
+   ============================================================ */
+async function loadOrders() {
+  const { data, error } = await sb.from('orders').select('*, listings(title, images)').order('created_at', { ascending: false });
+  if (error) { console.error('Orders load error:', error); }
+  const wrap = $('ordersList');
+  if (!data || !data.length) { wrap.innerHTML = ''; $('ordersEmpty').style.display = 'block'; return; }
+  $('ordersEmpty').style.display = 'none';
+  wrap.innerHTML = data.map(o => renderOrderCard(o)).join('');
+}
+function renderOrderCard(o) {
+  const listing = o.listings || {};
+  const labels = {
+    pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped',
+    delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled'
+  };
+  return `<div class="order-card">
+    <div class="order-header">
+      <span class="order-id">#${o.id.slice(0,8)}</span>
+      <span class="order-status status-${o.delivery_status}">${labels[o.delivery_status] || o.delivery_status}</span>
+    </div>
+    <div class="order-row"><span class="k">Item</span><span class="v">${esc(listing.title || 'Deleted')}</span></div>
+    <div class="order-row"><span class="k">Amount</span><span class="v">$${parseFloat(o.amount_usd).toFixed(2)} (COD)</span></div>
+    <div class="order-row"><span class="k">Deliver to</span><span class="v">${esc(o.delivery_address || '')}, ${esc(o.delivery_city || '')}</span></div>
+    <div class="order-row"><span class="k">Phone</span><span class="v">${esc(o.delivery_phone || '')}</span></div>
+    <div class="order-row"><span class="k">Date</span><span class="v">${new Date(o.created_at).toLocaleDateString()}</span></div>
+    ${o.admin_notes ? `<div class="order-row"><span class="k">Notes</span><span class="v">${esc(o.admin_notes)}</span></div>` : ''}
+  </div>`;
+}
+
+/* ============================================================
+   PUBLIC CHAT
+   ============================================================ */
+async function loadPublicChat() {
+  const { data, error } = await sb.from('public_messages')
+    .select('*')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: true })
+    .limit(1000);
+  if (error) { console.error('Public chat load error:', error); return; }
+  renderPublicChat(data || []);
+
+  const enabled = SETTINGS.public_chat_enabled === 'true';
+  if ($('pubchatInput')) {
+    $('pubchatInput').disabled = !enabled;
+    $('pubchatSendBtn').disabled = !enabled;
+    $('pubchatInput').placeholder = enabled ? 'Type a message...' : (SETTINGS.public_chat_locked_message || 'Chat unavailable');
+  }
+}
+function renderPublicChat(msgs) {
+  const box = $('pubchatBody');
+  if (!box) return;
+  if (!msgs.length) {
+    box.innerHTML = '<div style="text-align:center;color:var(--dim);font-size:11px;padding:30px">No messages yet. Be the first!</div>';
+    $('pubchatCount').textContent = '0 messages';
+    return;
+  }
+  box.innerHTML = msgs.map(m => {
+    const isMine = m.user_id === ME.id;
+    const isAdmin = ME.role === 'admin';
+    const delBtn = isAdmin ? `<button class="pub-del-btn" data-pubdel="${m.id}" title="Delete">×</button>` : '';
+    return `<div class="pubmsg ${isMine ? 'mine' : 'other'}">
+      ${delBtn}
+      ${!isMine ? `<div class="meta"><span class="name">${esc(m.username)}</span></div>` : ''}
+      <div>${esc(m.text).replace(/\n/g, '<br>')}</div>
+      <div class="meta">${new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+  $('pubchatCount').textContent = msgs.length + ' messages';
+
+  box.querySelectorAll('[data-pubdel]').forEach(b => {
+    b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this message?')) return;
+      const { error } = await sb.from('public_messages').delete().eq('id', b.dataset.pubdel);
+      if (error) { toast(error.message, 'err'); return; }
+      toast('Message deleted', 'ok');
+      b.closest('.pubmsg').remove();
+      setTimeout(() => loadPublicChat(), 100);
+    });
+  });
+}
+$('pubchatSendBtn').addEventListener('click', sendPublicMsg);
+$('pubchatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendPublicMsg(); });
+async function sendPublicMsg() {
+  const text = $('pubchatInput').value.trim();
+  if (!text) return;
+  if (SETTINGS.public_chat_enabled !== 'true') { toast('Chat is shutdown', 'warn'); return; }
+  $('pubchatInput').value = '';
+  const { error } = await sb.from('public_messages').insert({
+    user_id: ME.id, username: ME.username, text: text
+  });
+  if (error) { toast(error.message, 'err'); return; }
+  loadPublicChat();
+}
+
+function startPublicChatPolling() {
+  if (pubPollTimer) clearInterval(pubPollTimer);
+  pubPollTimer = setInterval(() => {
+    const v = $('view-pubchat');
+    if (v && v.classList.contains('active')) {
+      loadPublicChat();
+    }
+  }, 4000);
+}
+
+/* ============================================================
+   ADMIN
+   ============================================================ */
+$('addListingBtn').addEventListener('click', async () => {
+  const title = $('alTitle').value.trim();
+  const desc = $('alDesc').value.trim();
+  const price = parseFloat($('alPrice').value);
+  const cat = $('alCat').value.trim() || 'general';
+  const files = $('alImages').files;
+  const err = $('alErr'); err.textContent = '';
+  if (!title || !desc || !price || price <= 0) { err.textContent = 'Title, description and valid price required'; return; }
+  $('addListingBtn').disabled = true; $('addListingBtn').textContent = 'UPLOADING...';
+  const images = [];
+  for (let i = 0; i < Math.min(files.length, 4); i++) {
+    const f = files[i];
+    const ext = f.name.split('.').pop();
+    const path = `listing_${Date.now()}_${i}.${ext}`;
+    const { error: upErr } = await sb.storage.from('listing-images').upload(path, f);
+    if (!upErr) {
+      const { data: pub } = sb.storage.from('listing-images').getPublicUrl(path);
+      images.push(pub.publicUrl);
+    }
+  }
+  const { error } = await sb.from('listings').insert({ title, description: desc, price_usd: price, category: cat, images });
+  $('addListingBtn').disabled = false; $('addListingBtn').textContent = 'Publish Listing';
+  if (error) { err.textContent = error.message; return; }
+  toast('Listing published', 'ok');
+  $('alTitle').value = ''; $('alDesc').value = ''; $('alPrice').value = ''; $('alImages').value = ''; $('imgPreview').innerHTML = '';
+  loadListings();
+});
+$('alImages').addEventListener('change', () => {
+  const preview = $('imgPreview');
+  preview.innerHTML = '';
+  Array.from($('alImages').files).slice(0, 4).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => {
+      const div = document.createElement('div');
+      div.className = 'prev';
+      div.innerHTML = `<img src="${e.target.result}">`;
+      preview.appendChild(div);
+    };
+    r.readAsDataURL(f);
+  });
+});
+
+$('saveCodBtn').addEventListener('click', async () => {
+  const updates = [
+    { key: 'cod_full_name', value: $('setFullName').value.trim() },
+    { key: 'cod_phone', value: $('setPhone').value.trim() },
+    { key: 'cod_address', value: $('setAddress').value.trim() },
+    { key: 'cod_city', value: $('setCity').value.trim() },
+    { key: 'cod_instructions', value: $('setInstructions').value.trim() }
+  ];
+  for (const u of updates) {
+    await sb.from('settings').upsert({ key: u.key, value: u.value, updated_at: new Date().toISOString() });
+  }
+  toast('COD info saved', 'ok');
+  await loadSettings();
+});
+
+$('chatToggleBtn').addEventListener('click', async () => {
+  const current = SETTINGS.public_chat_enabled === 'true';
+  const newVal = current ? 'false' : 'true';
+  await sb.from('settings').upsert({ key: 'public_chat_enabled', value: newVal, updated_at: new Date().toISOString() });
+  toast(newVal === 'true' ? 'Chat enabled' : 'Chat shutdown', newVal === 'true' ? 'ok' : 'warn');
+  await loadSettings();
+  loadPublicChat();
+});
+$('chatClearBtn').addEventListener('click', async () => {
+  if (!confirm('Delete ALL public chat messages? Cannot be undone.')) return;
+  const { error } = await sb.from('public_messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (error) { toast(error.message, 'err'); return; }
+  toast('All messages deleted', 'ok');
+  loadPublicChat();
+  if ($('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
+});
+$('chatLockBtn').addEventListener('click', async () => {
+  const msg = prompt('Lock message:', SETTINGS.public_chat_locked_message || 'Chat is unavailable.');
+  if (msg === null) return;
+  await sb.from('settings').upsert({ key: 'public_chat_locked_message', value: msg, updated_at: new Date().toISOString() });
+  toast('Lock message updated', 'ok');
+  await loadSettings();
+});
+
+$('toggleListings').addEventListener('click', () => {
+  const box = $('adminListings');
+  const isOpen = box.style.display !== 'none';
+  box.style.display = isOpen ? 'none' : 'block';
+  $('toggleListings').textContent = isOpen ? 'SHOW' : 'HIDE';
+  if (!isOpen) loadAdminListings();
+});
+$('toggleOrders').addEventListener('click', () => {
+  const box = $('adminOrders');
+  const isOpen = box.style.display !== 'none';
+  box.style.display = isOpen ? 'none' : 'block';
+  $('toggleOrders').textContent = isOpen ? 'SHOW' : 'HIDE';
+  if (!isOpen) loadAdminOrders();
+});
+$('toggleUsers').addEventListener('click', () => {
+  const box = $('adminUsers');
+  const isOpen = box.style.display !== 'none';
+  box.style.display = isOpen ? 'none' : 'block';
+  $('toggleUsers').textContent = isOpen ? 'SHOW' : 'HIDE';
+  if (!isOpen) loadAdminUsers();
+});
+$('togglePubMsgs').addEventListener('click', () => {
+  const box = $('adminPubMsgs');
+  const isOpen = box.style.display !== 'none';
+  box.style.display = isOpen ? 'none' : 'block';
+  $('togglePubMsgs').textContent = isOpen ? 'SHOW' : 'HIDE';
+  if (!isOpen) loadAdminPubMsgs();
+});
+
+async function loadAdminData() {
+  if (ME.role !== 'admin') return;
+  await Promise.all([loadAdminListings(), loadAdminOrders(), loadAdminUsers()]);
+}
+
+async function loadAdminListings() {
+  const { data: listings, error } = await sb.from('listings').select('*').order('created_at', { ascending: false });
+  if (error) console.error('Listings error:', error);
+  $('listingCount').textContent = listings?.length || 0;
+  $('adminListings').innerHTML = (listings || []).map(l => {
+    const img = (l.images && l.images[0]) || '';
+    return `<div class="admin-listing">
+      <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
+      <div class="body">
+        <b>${esc(l.title)}</b>
+        <small>$${parseFloat(l.price_usd).toFixed(2)} · ${l.status}</small>
+      </div>
+      <div class="row">
+        <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? 'HIDE' : 'SHOW'}</button>
+        <button class="btn tiny danger" data-ldelete="${l.id}">DEL</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>';
+
+  document.querySelectorAll('[data-ltoggle]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const l = listings.find(x => x.id === b.dataset.ltoggle);
+      if (!l) return;
+      const newStatus = l.status === 'active' ? 'hidden' : 'active';
+      await sb.from('listings').update({ status: newStatus }).eq('id', l.id);
+      toast('Listing ' + newStatus, 'ok');
+      loadAdminListings(); loadListings();
+    });
+  });
+  document.querySelectorAll('[data-ldelete]').forEach(b => {
+    b.addEventListener('click', async () => {
+      if (!confirm('Delete this listing permanently?')) return;
+      await sb.from('listings').delete().eq('id', b.dataset.ldelete);
+      toast('Listing deleted', 'ok');
+      loadAdminListings(); loadListings();
+    });
+  });
+}
+
+async function loadAdminOrders() {
+  const { data: orders, error } = await sb.from('orders').select('*, listings(title, images)').order('created_at', { ascending: false });
+  if (error) { console.error('Admin orders error:', error); toast('Orders load failed: ' + error.message, 'err'); return; }
+
+  const buyerIds = [...new Set((orders||[]).map(o => o.buyer_id).filter(Boolean))];
+  const buyersMap = {};
+  if (buyerIds.length) {
+    const { data: buyers } = await sb.from('profiles').select('id, username').in('id', buyerIds);
+    (buyers||[]).forEach(b => buyersMap[b.id] = b.username);
+  }
+
+  $('orderCount').textContent = orders?.length || 0;
+  $('adminOrders').innerHTML = (orders || []).map(o => {
+    const listing = o.listings || {};
+    const buyerName = buyersMap[o.buyer_id] || 'Unknown';
+    const labels = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', completed: 'Completed', cancelled: 'Cancelled' };
+    return `<div class="admin-order">
+      <div class="hdr">
+        <b>#${o.id.slice(0,8)} · ${esc(listing.title || 'Deleted')}</b>
+        <span class="chip ${o.delivery_status === 'completed' ? 'green' : o.delivery_status === 'cancelled' ? 'red' : 'gold'}">${labels[o.delivery_status] || o.delivery_status}</span>
+      </div>
+      <div class="info">
+        Buyer: <b>${esc(buyerName)}</b> · $${parseFloat(o.amount_usd).toFixed(2)} (COD)<br>
+        Deliver: ${esc(o.delivery_full_name || '')} · ${esc(o.delivery_phone || '')}<br>
+        Addr: ${esc(o.delivery_address || '')}, ${esc(o.delivery_city || '')}
+        ${o.delivery_notes ? `<br>Notes: ${esc(o.delivery_notes)}` : ''}
+      </div>
+      <div class="actions">
+        <select class="btn tiny ghost" data-ostatus="${o.id}" style="padding:6px 8px;font-family:inherit">
+          ${['pending','confirmed','shipped','delivered','completed','cancelled'].map(s => `<option value="${s}" ${o.delivery_status === s ? 'selected' : ''}>${labels[s]}</option>`).join('')}
+        </select>
+        ${o.chat_id ? `<button class="btn tiny ghost" data-oopen="${o.chat_id}">CHAT</button>` : ''}
+        <button class="btn tiny danger" data-odelete="${o.id}">DELETE</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:11px">No orders yet</div>';
+
+  document.querySelectorAll('[data-ostatus]').forEach(s => {
+    s.addEventListener('change', async () => {
+      await sb.from('orders').update({ delivery_status: s.value }).eq('id', s.dataset.ostatus);
+      toast('Order updated', 'ok');
+      loadAdminOrders(); loadOrders();
+    });
+  });
+  document.querySelectorAll('[data-oopen]').forEach(b => {
+    b.addEventListener('click', () => { if (b.dataset.oopen) openChat(b.dataset.oopen, null); });
+  });
+  document.querySelectorAll('[data-odelete]').forEach(b => {
+    b.addEventListener('click', async () => {
+      if (!confirm('Delete this order permanently?')) return;
+      const { error } = await sb.from('orders').delete().eq('id', b.dataset.odelete);
+      if (error) { toast(error.message, 'err'); return; }
+      toast('Order deleted', 'ok');
+      loadAdminOrders(); loadOrders();
+    });
+  });
+}
+
+async function loadAdminUsers() {
+  const { data: users, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+  if (error) console.error('Users error:', error);
+  $('userCount').textContent = users?.length || 0;
+  $('adminUsers').innerHTML = (users || []).map(u => {
+    return `<div class="user-item">
+      <div class="name">
+        <span>${esc(u.username)} ${u.role === 'admin' ? '<span class="chip gold">ADMIN</span>' : ''} ${u.is_banned ? '<span class="chip red">BANNED</span>' : ''}</span>
+      </div>
+      <div class="meta">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
+      <div class="row" style="margin-top:8px">
+        ${u.id !== ME.id ? `
+          <button class="btn tiny ${u.is_banned ? 'ghost' : 'danger'}" data-uban="${u.id}" data-banned="${u.is_banned}">${u.is_banned ? 'UNBAN' : 'BAN'}</button>
+          <button class="btn tiny danger" data-udelete="${u.id}">DELETE</button>
+        ` : '<span style="color:var(--gold);font-size:10px">YOU</span>'}
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:11px">No users</div>';
+
+  document.querySelectorAll('[data-uban]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const currentlyBanned = b.dataset.banned === 'true';
+      await sb.from('profiles').update({ is_banned: !currentlyBanned, ban_reason: !currentlyBanned ? 'Violation of rules' : null }).eq('id', b.dataset.uban);
+      toast(!currentlyBanned ? 'User banned' : 'User unbanned', !currentlyBanned ? 'warn' : 'ok');
+      loadAdminUsers();
+    });
+  });
+  document.querySelectorAll('[data-udelete]').forEach(b => {
+    b.addEventListener('click', async () => {
+      if (!confirm('DELETE user and all their data? Cannot be undone.')) return;
+      await sb.from('profiles').delete().eq('id', b.dataset.udelete);
+      toast('User deleted', 'ok');
+      loadAdminUsers();
+    });
+  });
+}
+
+async function loadAdminPubMsgs() {
+  const { data } = await sb.from('public_messages').select('*').order('created_at', { ascending: false }).limit(200);
+  $('adminPubMsgs').innerHTML = (data || []).map(m => `
+    <div class="admin-msg">
+      <div class="hdr"><b>${esc(m.username)}</b><span>${timeAgo(m.created_at)}</span></div>
+      <div class="txt">${esc(m.text).replace(/\n/g, '<br>')}</div>
+      <button class="btn tiny danger" data-pdel="${m.id}">DELETE</button>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:11px">No messages</div>';
+
+  document.querySelectorAll('[data-pdel]').forEach(b => {
+    b.addEventListener('click', async () => {
+      const { error } = await sb.from('public_messages').delete().eq('id', b.dataset.pdel);
+      if (error) { toast(error.message, 'err'); return; }
+      toast('Message deleted', 'ok');
+      loadAdminPubMsgs(); loadPublicChat();
+    });
+  });
+}
+
+/* ============================================================
+   REALTIME
+   ============================================================ */
+function setupRealtime() {
+  [chatChannel, listChannel, pubChannel].forEach(c => { if (c) sb.removeChannel(c); });
+
+  chatChannel = sb.channel('rt-messages-' + ME.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      const m = payload.new;
+      if (ACTIVE_CHAT && m.chat_id === ACTIVE_CHAT) loadMessages();
+      else if (m.sender_id !== ME.id) { unreadCount++; updateUnreadBadge(); loadChats(); }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, () => {
+      if (ACTIVE_CHAT) loadMessages();
+      loadChats();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
+      loadOrders(); if (ME.role === 'admin') loadAdminOrders();
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'orders' }, () => {
+      loadOrders(); if (ME.role === 'admin') loadAdminOrders();
+    })
+    .subscribe();
+
+  listChannel = sb.channel('rt-listings-' + ME.id)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => {
+      loadListings();
+      if (ME.role === 'admin') loadAdminListings();
+    })
+    .subscribe();
+
+  pubChannel = sb.channel('rt-pubchat-' + ME.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'public_messages' }, () => {
+      loadPublicChat();
+      if (ME.role === 'admin' && $('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'public_messages' }, () => {
+      loadPublicChat();
+      if (ME.role === 'admin' && $('adminPubMsgs').style.display !== 'none') loadAdminPubMsgs();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
+      loadSettings();
+      loadPublicChat();
+    })
+    .subscribe();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+applyLogo();
+setTimeout(() => { $('splash').classList.add('hide'); }, 900);
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('authScreen').classList.add('on'); $('appScreen').classList.remove('on'); }
+})();
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouch <= 300) e.preventDefault();
+  lastTouch = now;
+}, { passive: false });
+</script>
+</body>
+</html>
