@@ -288,22 +288,48 @@
   .admin-order .info{color:var(--muted);font-size:10px;margin-bottom:8px;line-height:1.6}
   .admin-order .info b{color:var(--text)}
   .admin-order .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  /* ============ ADMIN LISTING ROW (with reorder controls) ============ */
-  .admin-listing{display:flex;gap:10px;align-items:center}
+
+  /* ============ ADMIN LISTING — DRAG & DROP ============ */
+  .admin-listing{
+    display:flex;gap:10px;align-items:center;
+    transition:transform .18s cubic-bezier(.2,.9,.3,1),box-shadow .18s,background .18s,opacity .18s;
+    user-select:none;-webkit-user-select:none;
+  }
+  .admin-listing .drag-handle{
+    width:26px;height:44px;flex-shrink:0;
+    display:grid;place-items:center;
+    color:var(--gold);font-size:16px;font-weight:900;
+    cursor:grab;touch-action:none;
+    border-radius:6px;
+    transition:background .15s,color .15s;
+    letter-spacing:-2px;line-height:1;
+  }
+  .admin-listing .drag-handle:active{cursor:grabbing;background:rgba(212,175,55,0.12)}
   .admin-listing .thumb{width:44px;height:44px;border-radius:8px;overflow:hidden;background:var(--panel3);flex-shrink:0;border:1px solid var(--line)}
   .admin-listing .thumb img{width:100%;height:100%;object-fit:cover}
   .admin-listing .body{flex:1;min-width:0}
   .admin-listing .body b{color:var(--white);font-size:11.5px;display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .admin-listing .body small{color:var(--muted);font-size:10px}
-  .admin-listing .sort-col{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
-  .admin-listing .sort-btn{width:26px;height:22px;border-radius:6px;background:var(--panel3);
-    color:var(--gold);border:1px solid var(--line2);font-size:11px;font-weight:900;
-    cursor:pointer;display:grid;place-items:center;font-family:inherit;padding:0;transition:all .15s;line-height:1}
-  .admin-listing .sort-btn:active{transform:scale(.9)}
-  .admin-listing .sort-btn:disabled{opacity:.25;cursor:not-allowed}
   .admin-listing .ctrls{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
   .admin-listing .ctrls .row{display:flex;gap:4px}
-  /* =================================================================== */
+
+  .admin-listing.dragging{
+    opacity:0.55;
+    background:var(--panel3);
+    box-shadow:0 12px 28px rgba(0,0,0,0.6);
+    border-color:var(--gold);
+    transform:scale(1.02);
+    z-index:10;
+    position:relative;
+  }
+  .admin-listing.drag-over-top{
+    box-shadow:0 -3px 0 0 var(--gold);
+  }
+  .admin-listing.drag-over-bottom{
+    box-shadow:0 3px 0 0 var(--gold);
+  }
+  /* ===================================================== */
+
   .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:10px;align-items:center}
   .admin-msg .hdr b{color:var(--gold)}
   .admin-msg .txt{color:var(--text);font-size:11px;line-height:1.5;word-break:break-word;margin-bottom:6px}
@@ -565,7 +591,7 @@
       <div class="admin-section">
         <h3><span class="left">Listings (<span id="listingCount">0</span>)</span><span class="toggle" id="toggleListings">SHOW</span></h3>
         <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">
-          ▲▼ මගින් අනුපිළිවෙල වෙනස් කරන්න · ✎ Edit · 👁 Show/Hide · 🗑 Delete
+          <b style="color:var(--gold)">⠿</b> අල්ලාගෙන ඇදගෙන ගොස් අනුපිළිවෙල වෙනස් කරන්න · ✎ Edit · 👁 Show/Hide · 🗑 Delete
         </div>
         <div id="adminListings" style="display:none"></div>
       </div>
@@ -984,7 +1010,7 @@ function updateUnreadBadge() {
 }
 
 /* ============================================================
-   LISTINGS  (ordered by sort_order ASC, then created_at DESC)
+   LISTINGS
    ============================================================ */
 async function loadListings() {
   $('marketLoading').style.display = 'block';
@@ -1716,7 +1742,7 @@ function startPublicChatPolling() {
 }
 
 /* ============================================================
-   NOTICE BOARD  (with Edit)
+   NOTICE BOARD
    ============================================================ */
 let NOTICES_CACHE = [];
 
@@ -1851,7 +1877,7 @@ $('addListingBtn').addEventListener('click', async () => {
     }
   }
 
-  // Determine sort_order: max + 1  (so new listings appear at bottom)
+  // Determine next sort_order (max + 1)
   let nextOrder = 1;
   const { data: maxRow } = await sb.from('listings').select('sort_order').order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
   if (maxRow && typeof maxRow.sort_order === 'number') nextOrder = maxRow.sort_order + 1;
@@ -1948,7 +1974,7 @@ async function loadAdminData() {
 }
 
 /* ============================================================
-   ADMIN — LISTINGS  (reorder + edit + hide + delete)
+   ADMIN — LISTINGS (DRAG & DROP + EDIT + HIDE + DELETE)
    ============================================================ */
 async function loadAdminListings() {
   const { data: listings, error } = await sb.from('listings')
@@ -1961,28 +1987,21 @@ async function loadAdminListings() {
   $('adminListings').innerHTML = (listings || []).map((l, idx) => {
     const img = (l.images && l.images[0]) || '';
     const priceStr = fmtPrice(l.price_usd, l.currency);
-    const isFirst = idx === 0;
-    const isLast = idx === (listings.length - 1);
-    return `<div class="admin-listing">
-      <div class="sort-col">
-        <button class="sort-btn" data-lmove="${l.id}" data-dir="up" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
-        <button class="sort-btn" data-lmove="${l.id}" data-dir="down" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
-      </div>
+    return `<div class="admin-listing" data-id="${l.id}">
+      <div class="drag-handle" title="Drag to reorder">⠿</div>
       <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
       <div class="body"><b>${esc(l.title)}</b><small>#${idx+1} · ${esc(priceStr)} · ${l.status}</small></div>
       <div class="ctrls">
         <div class="row">
           <button class="btn tiny gold" data-ledit="${l.id}" title="Edit">✎</button>
-          <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? '👁' : '🚫'}</button>
-          <button class="btn tiny danger" data-ldelete="${l.id}">🗑</button>
+          <button class="btn tiny ghost" data-ltoggle="${l.id}" title="Show/Hide">${l.status === 'active' ? '👁' : '🚫'}</button>
+          <button class="btn tiny danger" data-ldelete="${l.id}" title="Delete">🗑</button>
         </div>
       </div>
     </div>`;
   }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>';
 
-  document.querySelectorAll('[data-lmove]').forEach(b => {
-    b.addEventListener('click', () => moveListing(b.dataset.lmove, b.dataset.dir));
-  });
+  // Attach button handlers
   document.querySelectorAll('[data-ledit]').forEach(b => {
     b.addEventListener('click', () => {
       const l = listings.find(x => x.id === b.dataset.ledit);
@@ -2007,36 +2026,142 @@ async function loadAdminListings() {
       loadAdminListings(); loadListings();
     });
   });
-}
 
-/* Move listing up / down — reassign sequential sort_order */
-async function moveListing(id, direction) {
-  const { data: listings, error } = await sb.from('listings')
-    .select('id, sort_order, created_at')
-    .order('sort_order', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: false });
-  if (error || !listings) { toast('Reorder failed', 'err'); return; }
-
-  const idx = listings.findIndex(l => l.id === id);
-  if (idx < 0) return;
-  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-  if (swapIdx < 0 || swapIdx >= listings.length) return;
-
-  // Swap positions in the array
-  [listings[idx], listings[swapIdx]] = [listings[swapIdx], listings[idx]];
-
-  // Reassign sequential sort_order 1..N
-  for (let i = 0; i < listings.length; i++) {
-    await sb.from('listings').update({ sort_order: i + 1 }).eq('id', listings[i].id);
-  }
-
-  toast('Order updated', 'ok');
-  loadAdminListings();
-  loadListings();
+  // Attach drag-and-drop handlers
+  attachDragHandlers();
 }
 
 /* ============================================================
-   ADMIN — EDIT LISTING  (modal, reuses formModal)
+   DRAG & DROP  (works with mouse + touch via Pointer Events)
+   ============================================================ */
+let DRAG_STATE = null;
+
+function attachDragHandlers() {
+  document.querySelectorAll('#adminListings .admin-listing .drag-handle').forEach(handle => {
+    handle.addEventListener('pointerdown', startDrag);
+  });
+}
+
+function startDrag(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const handle = e.currentTarget;
+  const item = handle.closest('.admin-listing');
+  if (!item) return;
+  const container = item.parentElement;
+  if (!container) return;
+
+  DRAG_STATE = {
+    item,
+    container,
+    pointerId: e.pointerId,
+    startY: e.clientY,
+    lastY: e.clientY,
+    moved: false
+  };
+
+  item.classList.add('dragging');
+  document.body.style.userSelect = 'none';
+  document.body.style.webkitUserSelect = 'none';
+  document.body.style.cursor = 'grabbing';
+
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+}
+
+function onDragMove(e) {
+  if (!DRAG_STATE) return;
+  e.preventDefault();
+  DRAG_STATE.lastY = e.clientY;
+  if (Math.abs(e.clientY - DRAG_STATE.startY) > 4) DRAG_STATE.moved = true;
+
+  const { container, item } = DRAG_STATE;
+  const siblings = [...container.querySelectorAll('.admin-listing:not(.dragging)')];
+  if (!siblings.length) return;
+
+  // Clear previous indicators
+  siblings.forEach(s => s.classList.remove('drag-over-top','drag-over-bottom'));
+
+  // Find closest sibling by pointer position
+  let closest = null;
+  let closestDist = Infinity;
+  for (const s of siblings) {
+    const r = s.getBoundingClientRect();
+    const midY = r.top + r.height / 2;
+    const dist = Math.abs(e.clientY - midY);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = s;
+    }
+  }
+  if (!closest) return;
+
+  const r = closest.getBoundingClientRect();
+  const midY = r.top + r.height / 2;
+  const insertAfter = e.clientY > midY;
+
+  // Visual indicator
+  closest.classList.add(insertAfter ? 'drag-over-bottom' : 'drag-over-top');
+
+  // Move DOM
+  if (insertAfter) {
+    if (closest.nextSibling !== item) closest.after(item);
+  } else {
+    if (closest.previousSibling !== item) closest.before(item);
+  }
+}
+
+async function endDrag(e) {
+  if (!DRAG_STATE) return;
+  const { container, item, moved } = DRAG_STATE;
+
+  // Cleanup
+  document.querySelectorAll('.admin-listing').forEach(el => {
+    el.classList.remove('dragging','drag-over-top','drag-over-bottom');
+  });
+  document.body.style.userSelect = '';
+  document.body.style.webkitUserSelect = '';
+  document.body.style.cursor = '';
+
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', endDrag);
+  document.removeEventListener('pointercancel', endDrag);
+
+  DRAG_STATE = null;
+
+  if (!moved) return; // No actual move — skip DB write
+
+  // Read new order from DOM
+  const orderedIds = [...container.querySelectorAll('.admin-listing')].map(el => el.dataset.id);
+  if (!orderedIds.length) return;
+
+  // Save sequential sort_order 1..N
+  try {
+    const updates = orderedIds.map((id, i) =>
+      sb.from('listings').update({ sort_order: i + 1 }).eq('id', id)
+    );
+    await Promise.all(updates);
+    toast('Order updated', 'ok');
+    loadListings(); // refresh Market
+    // Refresh numbering on admin list without full reload
+    const rows = [...container.querySelectorAll('.admin-listing')];
+    rows.forEach((row, i) => {
+      const smallEl = row.querySelector('.body small');
+      if (smallEl) {
+        const txt = smallEl.textContent;
+        smallEl.textContent = txt.replace(/^#\d+/, '#' + (i + 1));
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    toast('Could not save order', 'err');
+  }
+}
+
+/* ============================================================
+   ADMIN — EDIT LISTING
    ============================================================ */
 function openEditListing(listing) {
   if (ME.role !== 'admin') return;
@@ -2063,10 +2188,8 @@ function openEditListing(listing) {
     </div>
     <div class="field"><label>Current Images</label>
       ${imgs.length
-        ? `<div class="img-preview" id="elCurrentImgs">${imgs.map((u, i) => `
-            <div class="prev">
-              <img src="${esc(u)}" alt="">
-            </div>`).join('')}</div>`
+        ? `<div class="img-preview">${imgs.map((u) => `
+            <div class="prev"><img src="${esc(u)}" alt=""></div>`).join('')}</div>`
         : '<div style="font-size:11px;color:var(--muted);padding:6px">No images</div>'}
     </div>
     <div class="field"><label>Replace Images (optional · max 4)</label>
@@ -2108,7 +2231,6 @@ function openEditListing(listing) {
     $('elSaveBtn').disabled = true;
     $('elSaveBtn').textContent = 'SAVING...';
 
-    // Upload new images if provided, else keep old ones
     const files = $('elImages').files;
     let finalImages = imgs;
     if (files && files.length > 0) {
