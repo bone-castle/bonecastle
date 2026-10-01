@@ -289,45 +289,79 @@
   .admin-order .info b{color:var(--text)}
   .admin-order .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
-  /* ============ ADMIN LISTING — DRAG & DROP ============ */
+  /* ============ ADMIN LISTING — NUMBER SYSTEM ============ */
   .admin-listing{
     display:flex;gap:10px;align-items:center;
-    transition:transform .18s cubic-bezier(.2,.9,.3,1),box-shadow .18s,background .18s,opacity .18s;
-    user-select:none;-webkit-user-select:none;
+    transition:background .2s,box-shadow .2s;
   }
-  .admin-listing .drag-handle{
-    width:26px;height:44px;flex-shrink:0;
+  .admin-listing.moving{
+    background:rgba(212,175,55,0.15);
+    box-shadow:0 0 0 1.5px var(--gold);
+  }
+  .admin-listing .num-badge{
+    min-width:36px;height:36px;flex-shrink:0;
     display:grid;place-items:center;
-    color:var(--gold);font-size:16px;font-weight:900;
-    cursor:grab;touch-action:none;
-    border-radius:6px;
-    transition:background .15s,color .15s;
-    letter-spacing:-2px;line-height:1;
+    background:var(--panel3);
+    border:1.5px solid var(--line2);
+    border-radius:9px;
+    font-family:var(--mono);
+    font-size:14px;font-weight:900;
+    color:var(--gold);
+    padding:0 6px;
+    letter-spacing:.5px;
+    transition:all .18s;
   }
-  .admin-listing .drag-handle:active{cursor:grabbing;background:rgba(212,175,55,0.12)}
   .admin-listing .thumb{width:44px;height:44px;border-radius:8px;overflow:hidden;background:var(--panel3);flex-shrink:0;border:1px solid var(--line)}
   .admin-listing .thumb img{width:100%;height:100%;object-fit:cover}
   .admin-listing .body{flex:1;min-width:0}
   .admin-listing .body b{color:var(--white);font-size:11.5px;display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .admin-listing .body small{color:var(--muted);font-size:10px}
+  .admin-listing .pos-ctrl{
+    display:flex;align-items:center;gap:5px;flex-shrink:0;
+    background:var(--panel3);
+    border:1.5px solid var(--line2);
+    border-radius:9px;
+    padding:3px 5px;
+  }
+  .admin-listing .pos-ctrl label{
+    font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;
+    font-weight:700;padding-left:3px;
+  }
+  .admin-listing .pos-input{
+    width:52px;height:28px;
+    background:#0a0a0a;
+    border:1px solid var(--line2);
+    color:var(--gold);
+    border-radius:6px;
+    font-family:var(--mono);
+    font-size:13px;font-weight:800;
+    text-align:center;
+    outline:none;
+    padding:0;
+    transition:all .15s;
+  }
+  .admin-listing .pos-input:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 2px rgba(212,175,55,0.2);
+  }
+  .admin-listing .pos-ctrl .go{
+    width:28px;height:28px;
+    background:linear-gradient(180deg,var(--gold),#a88428);
+    color:#000;border:none;border-radius:6px;
+    font-size:13px;font-weight:900;cursor:pointer;
+    display:grid;place-items:center;padding:0;
+    font-family:inherit;transition:all .15s;line-height:1;
+  }
+  .admin-listing .pos-ctrl .go:active{transform:scale(.9)}
+  .admin-listing .pos-ctrl .go:disabled{opacity:.35;cursor:not-allowed}
   .admin-listing .ctrls{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
   .admin-listing .ctrls .row{display:flex;gap:4px}
-
-  .admin-listing.dragging{
-    opacity:0.55;
-    background:var(--panel3);
-    box-shadow:0 12px 28px rgba(0,0,0,0.6);
-    border-color:var(--gold);
-    transform:scale(1.02);
-    z-index:10;
-    position:relative;
+  .admin-list-hint{
+    font-size:10.5px;color:var(--muted);line-height:1.6;margin-bottom:10px;
+    padding:8px 10px;background:rgba(212,175,55,0.06);
+    border:1px solid rgba(212,175,55,0.2);border-radius:8px;
   }
-  .admin-listing.drag-over-top{
-    box-shadow:0 -3px 0 0 var(--gold);
-  }
-  .admin-listing.drag-over-bottom{
-    box-shadow:0 3px 0 0 var(--gold);
-  }
+  .admin-list-hint b{color:var(--gold)}
   /* ===================================================== */
 
   .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:10px;align-items:center}
@@ -590,9 +624,6 @@
 
       <div class="admin-section">
         <h3><span class="left">Listings (<span id="listingCount">0</span>)</span><span class="toggle" id="toggleListings">SHOW</span></h3>
-        <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">
-          <b style="color:var(--gold)">⠿</b> අල්ලාගෙන ඇදගෙන ගොස් අනුපිළිවෙල වෙනස් කරන්න · ✎ Edit · 👁 Show/Hide · 🗑 Delete
-        </div>
         <div id="adminListings" style="display:none"></div>
       </div>
 
@@ -1877,7 +1908,6 @@ $('addListingBtn').addEventListener('click', async () => {
     }
   }
 
-  // Determine next sort_order (max + 1)
   let nextOrder = 1;
   const { data: maxRow } = await sb.from('listings').select('sort_order').order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
   if (maxRow && typeof maxRow.sort_order === 'number') nextOrder = maxRow.sort_order + 1;
@@ -1974,7 +2004,7 @@ async function loadAdminData() {
 }
 
 /* ============================================================
-   ADMIN — LISTINGS (DRAG & DROP + EDIT + HIDE + DELETE)
+   ADMIN — LISTINGS (NUMBER SYSTEM REORDER)
    ============================================================ */
 async function loadAdminListings() {
   const { data: listings, error } = await sb.from('listings')
@@ -1983,31 +2013,48 @@ async function loadAdminListings() {
     .order('created_at', { ascending: false });
   if (error) console.error('Listings error:', error);
   $('listingCount').textContent = listings?.length || 0;
+  const total = listings?.length || 0;
 
-  $('adminListings').innerHTML = (listings || []).map((l, idx) => {
-    const img = (l.images && l.images[0]) || '';
-    const priceStr = fmtPrice(l.price_usd, l.currency);
-    return `<div class="admin-listing" data-id="${l.id}">
-      <div class="drag-handle" title="Drag to reorder">⠿</div>
-      <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
-      <div class="body"><b>${esc(l.title)}</b><small>#${idx+1} · ${esc(priceStr)} · ${l.status}</small></div>
-      <div class="ctrls">
-        <div class="row">
-          <button class="btn tiny gold" data-ledit="${l.id}" title="Edit">✎</button>
-          <button class="btn tiny ghost" data-ltoggle="${l.id}" title="Show/Hide">${l.status === 'active' ? '👁' : '🚫'}</button>
-          <button class="btn tiny danger" data-ldelete="${l.id}" title="Delete">🗑</button>
+  $('adminListings').innerHTML = `
+    <div class="admin-list-hint">
+      🔢 <b>අංකය වෙනස් කරන්න:</b> දැනට ඇති position අංකය වෙනුවට ඔබට කැමති අංකය (1 සිට ${total} දක්වා) ඇතුළත් කර <b>→</b> බොත්තම එබන්න. එම නිෂ්පාදනය එම තැනට ගෙන ගොස් අනිත් ඒවා ස්වයංක්‍රීයව පහළට හෝ ඉහළට මාරු වේ.
+    </div>
+    ${(listings || []).map((l, idx) => {
+      const img = (l.images && l.images[0]) || '';
+      const priceStr = fmtPrice(l.price_usd, l.currency);
+      return `<div class="admin-listing" data-id="${l.id}">
+        <div class="num-badge">#${idx+1}</div>
+        <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
+        <div class="body">
+          <b>${esc(l.title)}</b>
+          <small>${esc(priceStr)} · ${l.status}</small>
         </div>
-      </div>
-    </div>`;
-  }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>';
+        <div class="pos-ctrl">
+          <label for="pos_${l.id}">Pos</label>
+          <input type="number" class="pos-input" id="pos_${l.id}"
+                 min="1" max="${total}" value="${idx+1}"
+                 inputmode="numeric">
+          <button class="go" data-lgo="${l.id}" title="Move to position">→</button>
+        </div>
+        <div class="ctrls">
+          <div class="row">
+            <button class="btn tiny gold" data-ledit="${l.id}" title="Edit">✎</button>
+            <button class="btn tiny ghost" data-ltoggle="${l.id}" title="Show/Hide">${l.status === 'active' ? '👁' : '🚫'}</button>
+            <button class="btn tiny danger" data-ldelete="${l.id}" title="Delete">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>'}`;
 
-  // Attach button handlers
+  // Edit buttons
   document.querySelectorAll('[data-ledit]').forEach(b => {
     b.addEventListener('click', () => {
       const l = listings.find(x => x.id === b.dataset.ledit);
       if (l) openEditListing(l);
     });
   });
+
+  // Toggle Show/Hide
   document.querySelectorAll('[data-ltoggle]').forEach(b => {
     b.addEventListener('click', async () => {
       const l = listings.find(x => x.id === b.dataset.ltoggle);
@@ -2018,6 +2065,8 @@ async function loadAdminListings() {
       loadAdminListings(); loadListings();
     });
   });
+
+  // Delete
   document.querySelectorAll('[data-ldelete]').forEach(b => {
     b.addEventListener('click', async () => {
       if (!confirm('Delete this listing permanently?')) return;
@@ -2027,137 +2076,62 @@ async function loadAdminListings() {
     });
   });
 
-  // Attach drag-and-drop handlers
-  attachDragHandlers();
-}
-
-/* ============================================================
-   DRAG & DROP  (works with mouse + touch via Pointer Events)
-   ============================================================ */
-let DRAG_STATE = null;
-
-function attachDragHandlers() {
-  document.querySelectorAll('#adminListings .admin-listing .drag-handle').forEach(handle => {
-    handle.addEventListener('pointerdown', startDrag);
+  // "Go" buttons — move to typed position
+  document.querySelectorAll('[data-lgo]').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.dataset.lgo;
+      const input = $('pos_' + id);
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val < 1 || val > total) {
+        toast('Enter a number between 1 and ' + total, 'warn');
+        return;
+      }
+      moveListingToPosition(id, val);
+    });
   });
-}
 
-function startDrag(e) {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const handle = e.currentTarget;
-  const item = handle.closest('.admin-listing');
-  if (!item) return;
-  const container = item.parentElement;
-  if (!container) return;
-
-  DRAG_STATE = {
-    item,
-    container,
-    pointerId: e.pointerId,
-    startY: e.clientY,
-    lastY: e.clientY,
-    moved: false
-  };
-
-  item.classList.add('dragging');
-  document.body.style.userSelect = 'none';
-  document.body.style.webkitUserSelect = 'none';
-  document.body.style.cursor = 'grabbing';
-
-  document.addEventListener('pointermove', onDragMove);
-  document.addEventListener('pointerup', endDrag);
-  document.addEventListener('pointercancel', endDrag);
-}
-
-function onDragMove(e) {
-  if (!DRAG_STATE) return;
-  e.preventDefault();
-  DRAG_STATE.lastY = e.clientY;
-  if (Math.abs(e.clientY - DRAG_STATE.startY) > 4) DRAG_STATE.moved = true;
-
-  const { container, item } = DRAG_STATE;
-  const siblings = [...container.querySelectorAll('.admin-listing:not(.dragging)')];
-  if (!siblings.length) return;
-
-  // Clear previous indicators
-  siblings.forEach(s => s.classList.remove('drag-over-top','drag-over-bottom'));
-
-  // Find closest sibling by pointer position
-  let closest = null;
-  let closestDist = Infinity;
-  for (const s of siblings) {
-    const r = s.getBoundingClientRect();
-    const midY = r.top + r.height / 2;
-    const dist = Math.abs(e.clientY - midY);
-    if (dist < closestDist) {
-      closestDist = dist;
-      closest = s;
-    }
-  }
-  if (!closest) return;
-
-  const r = closest.getBoundingClientRect();
-  const midY = r.top + r.height / 2;
-  const insertAfter = e.clientY > midY;
-
-  // Visual indicator
-  closest.classList.add(insertAfter ? 'drag-over-bottom' : 'drag-over-top');
-
-  // Move DOM
-  if (insertAfter) {
-    if (closest.nextSibling !== item) closest.after(item);
-  } else {
-    if (closest.previousSibling !== item) closest.before(item);
-  }
-}
-
-async function endDrag(e) {
-  if (!DRAG_STATE) return;
-  const { container, item, moved } = DRAG_STATE;
-
-  // Cleanup
-  document.querySelectorAll('.admin-listing').forEach(el => {
-    el.classList.remove('dragging','drag-over-top','drag-over-bottom');
-  });
-  document.body.style.userSelect = '';
-  document.body.style.webkitUserSelect = '';
-  document.body.style.cursor = '';
-
-  document.removeEventListener('pointermove', onDragMove);
-  document.removeEventListener('pointerup', endDrag);
-  document.removeEventListener('pointercancel', endDrag);
-
-  DRAG_STATE = null;
-
-  if (!moved) return; // No actual move — skip DB write
-
-  // Read new order from DOM
-  const orderedIds = [...container.querySelectorAll('.admin-listing')].map(el => el.dataset.id);
-  if (!orderedIds.length) return;
-
-  // Save sequential sort_order 1..N
-  try {
-    const updates = orderedIds.map((id, i) =>
-      sb.from('listings').update({ sort_order: i + 1 }).eq('id', id)
-    );
-    await Promise.all(updates);
-    toast('Order updated', 'ok');
-    loadListings(); // refresh Market
-    // Refresh numbering on admin list without full reload
-    const rows = [...container.querySelectorAll('.admin-listing')];
-    rows.forEach((row, i) => {
-      const smallEl = row.querySelector('.body small');
-      if (smallEl) {
-        const txt = smallEl.textContent;
-        smallEl.textContent = txt.replace(/^#\d+/, '#' + (i + 1));
+  // Press Enter in the number input triggers "Go"
+  document.querySelectorAll('.pos-input').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const id = inp.id.replace('pos_', '');
+        const btn = document.querySelector(`[data-lgo="${id}"]`);
+        if (btn) btn.click();
       }
     });
-  } catch (err) {
-    console.error(err);
-    toast('Could not save order', 'err');
+    // Select all text on focus for quick overwrite
+    inp.addEventListener('focus', () => inp.select());
+  });
+}
+
+/* Move listing to a specific 1-based position */
+async function moveListingToPosition(id, targetPos) {
+  const { data: listings, error } = await sb.from('listings')
+    .select('id, sort_order, created_at')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  if (error || !listings) { toast('Reorder failed', 'err'); return; }
+
+  const fromIdx = listings.findIndex(l => l.id === id);
+  if (fromIdx < 0) return;
+  const toIdx = targetPos - 1;
+  if (toIdx === fromIdx) { toast('Already at that position', 'warn'); return; }
+
+  // Remove moving item, insert at new position
+  const [moved] = listings.splice(fromIdx, 1);
+  listings.splice(toIdx, 0, moved);
+
+  // Reassign sequential sort_order 1..N
+  for (let i = 0; i < listings.length; i++) {
+    await sb.from('listings').update({ sort_order: i + 1 }).eq('id', listings[i].id);
   }
+
+  toast(`Moved to position #${targetPos}`, 'ok');
+
+  // Re-render admin list AND market
+  await loadAdminListings();
+  await loadListings();
 }
 
 /* ============================================================
