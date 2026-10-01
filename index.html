@@ -36,7 +36,6 @@
   ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
   .logo-img{display:block;object-fit:contain}
 
-  /* ============ AUTH SCREEN — DARKER, NO GOLD (except button) ============ */
   #authScreen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;position:relative;z-index:1;
     background:#000}
   #authScreen.on{display:flex}
@@ -101,7 +100,6 @@
     margin-top:14px;line-height:1.6;letter-spacing:.3px;
   }
   .auth-hint b{color:var(--white);font-weight:700}
-  /* ==================================================================== */
 
   .btn{width:100%;padding:15px;border-radius:11px;border:none;
     background:linear-gradient(180deg,#fff,#e8e8e8);color:#000;font-size:12px;
@@ -109,7 +107,6 @@
     transition:all .2s;font-family:inherit}
   .btn:active{transform:scale(.98)}
   .btn:disabled{opacity:.4;cursor:not-allowed}
-  /* ONLY button keeps the gold — everything else on auth page is dark */
   .btn.gold{background:linear-gradient(180deg,var(--gold),#a88428);color:#000}
   .btn.danger{background:linear-gradient(180deg,#ff3b3b,#b91c1c);color:#fff}
   .btn.ghost{background:transparent;color:var(--text);border:1.5px solid var(--line2)}
@@ -162,10 +159,16 @@
     line-height:1.45;padding:6px 8px;background:rgba(0,0,0,0.28);
     border-radius:8px;border:1px solid rgba(212,175,55,0.15)}
   .notice-item .txt{flex:1;word-break:break-word;white-space:pre-wrap}
+  .notice-item .acts{display:flex;gap:4px;flex-shrink:0}
+  .notice-item .edit{width:18px;height:18px;border-radius:50%;background:rgba(212,175,55,0.1);
+    color:var(--gold);border:1px solid rgba(212,175,55,0.35);cursor:pointer;
+    font-size:10px;font-weight:900;line-height:1;display:grid;place-items:center;
+    flex-shrink:0;transition:all .15s;font-family:inherit;padding:0}
+  .notice-item .edit:active{transform:scale(.85)}
   .notice-item .del{width:18px;height:18px;border-radius:50%;background:var(--red-dim);
     color:var(--red);border:1px solid rgba(255,59,59,0.35);cursor:pointer;
     font-size:12px;font-weight:900;line-height:1;display:grid;place-items:center;
-    flex-shrink:0;transition:all .15s;font-family:inherit}
+    flex-shrink:0;transition:all .15s;font-family:inherit;padding:0}
   .notice-item .del:active{transform:scale(.85)}
   .notice-empty{font-size:10px;color:var(--muted);text-align:center;padding:4px}
   .online-dot-sm{
@@ -274,7 +277,7 @@
     background:linear-gradient(180deg,var(--gold),#a88428);border-radius:2px}
   .admin-section h3 .toggle{font-size:9px;color:var(--gold);cursor:pointer;font-family:var(--mono);letter-spacing:1px}
   .img-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-  .img-preview .prev{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .img-preview .prev{width:64px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line);position:relative}
   .img-preview .prev img{width:100%;height:100%;object-fit:cover}
   .user-item,.admin-order,.admin-listing,.admin-msg{
     background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:8px;font-size:11px}
@@ -285,12 +288,22 @@
   .admin-order .info{color:var(--muted);font-size:10px;margin-bottom:8px;line-height:1.6}
   .admin-order .info b{color:var(--text)}
   .admin-order .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  /* ============ ADMIN LISTING ROW (with reorder controls) ============ */
   .admin-listing{display:flex;gap:10px;align-items:center}
   .admin-listing .thumb{width:44px;height:44px;border-radius:8px;overflow:hidden;background:var(--panel3);flex-shrink:0;border:1px solid var(--line)}
   .admin-listing .thumb img{width:100%;height:100%;object-fit:cover}
   .admin-listing .body{flex:1;min-width:0}
   .admin-listing .body b{color:var(--white);font-size:11.5px;display:block;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .admin-listing .body small{color:var(--muted);font-size:10px}
+  .admin-listing .sort-col{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+  .admin-listing .sort-btn{width:26px;height:22px;border-radius:6px;background:var(--panel3);
+    color:var(--gold);border:1px solid var(--line2);font-size:11px;font-weight:900;
+    cursor:pointer;display:grid;place-items:center;font-family:inherit;padding:0;transition:all .15s;line-height:1}
+  .admin-listing .sort-btn:active{transform:scale(.9)}
+  .admin-listing .sort-btn:disabled{opacity:.25;cursor:not-allowed}
+  .admin-listing .ctrls{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .admin-listing .ctrls .row{display:flex;gap:4px}
+  /* =================================================================== */
   .admin-msg .hdr{display:flex;justify-content:space-between;margin-bottom:4px;color:var(--muted);font-size:10px;align-items:center}
   .admin-msg .hdr b{color:var(--gold)}
   .admin-msg .txt{color:var(--text);font-size:11px;line-height:1.5;word-break:break-word;margin-bottom:6px}
@@ -408,8 +421,6 @@
 </style>
 </head>
 <body>
-
-<!-- Splash screen removed -->
 
 <div id="authScreen">
   <div class="auth-card">
@@ -553,6 +564,9 @@
 
       <div class="admin-section">
         <h3><span class="left">Listings (<span id="listingCount">0</span>)</span><span class="toggle" id="toggleListings">SHOW</span></h3>
+        <div style="font-size:10.5px;color:var(--muted);line-height:1.5;margin-bottom:10px">
+          ▲▼ මගින් අනුපිළිවෙල වෙනස් කරන්න · ✎ Edit · 👁 Show/Hide · 🗑 Delete
+        </div>
         <div id="adminListings" style="display:none"></div>
       </div>
 
@@ -970,11 +984,15 @@ function updateUnreadBadge() {
 }
 
 /* ============================================================
-   LISTINGS
+   LISTINGS  (ordered by sort_order ASC, then created_at DESC)
    ============================================================ */
 async function loadListings() {
   $('marketLoading').style.display = 'block';
-  const { data, error } = await sb.from('listings').select('*').eq('status', 'active').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('listings')
+    .select('*')
+    .eq('status', 'active')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
   $('marketLoading').style.display = 'none';
   if (error) { toast(error.message, 'err'); return; }
   const grid = $('listingsGrid');
@@ -1698,8 +1716,10 @@ function startPublicChatPolling() {
 }
 
 /* ============================================================
-   NOTICE BOARD
+   NOTICE BOARD  (with Edit)
    ============================================================ */
+let NOTICES_CACHE = [];
+
 async function loadNotices() {
   const board = $('noticeBoard');
   const body = $('noticeBody');
@@ -1710,12 +1730,16 @@ async function loadNotices() {
 
   const { data, error } = await sb.from('notices').select('*').order('created_at', { ascending: false });
   if (error) { console.error('Notices load error:', error); return; }
+  NOTICES_CACHE = data || [];
 
-  if (!data || !data.length) { body.innerHTML = '<div class="notice-empty">No notices</div>'; return; }
+  if (!NOTICES_CACHE.length) { body.innerHTML = '<div class="notice-empty">No notices</div>'; return; }
 
-  body.innerHTML = data.map(n => `<div class="notice-item">
+  body.innerHTML = NOTICES_CACHE.map(n => `<div class="notice-item">
     <div class="txt">${esc(n.text)}</div>
-    ${ME.role === 'admin' ? `<button class="del" data-ndel="${n.id}" title="Delete">×</button>` : ''}
+    ${ME.role === 'admin' ? `<div class="acts">
+      <button class="edit" data-nedit="${n.id}" title="Edit">✎</button>
+      <button class="del" data-ndel="${n.id}" title="Delete">×</button>
+    </div>` : ''}
   </div>`).join('');
 
   body.querySelectorAll('[data-ndel]').forEach(b => {
@@ -1727,6 +1751,34 @@ async function loadNotices() {
       loadNotices();
     });
   });
+  body.querySelectorAll('[data-nedit]').forEach(b => {
+    b.addEventListener('click', () => {
+      const n = NOTICES_CACHE.find(x => x.id === b.dataset.nedit);
+      if (n) openEditNotice(n);
+    });
+  });
+}
+
+function openEditNotice(notice) {
+  if (ME.role !== 'admin') return;
+  $('formModalTitle').textContent = 'Edit Notice';
+  $('formModalBody').innerHTML = `
+    <div class="field"><label>Notice Text</label><textarea id="enText" rows="4" maxlength="500">${esc(notice.text)}</textarea></div>
+    <button class="btn gold" id="enSaveBtn">Save Changes</button>
+    <div class="auth-err" id="enErr"></div>
+  `;
+  $('enSaveBtn').addEventListener('click', async () => {
+    const text = $('enText').value.trim();
+    if (!text) { $('enErr').textContent = 'Notice cannot be empty'; return; }
+    $('enSaveBtn').disabled = true; $('enSaveBtn').textContent = 'SAVING...';
+    const { error } = await sb.from('notices').update({ text }).eq('id', notice.id);
+    $('enSaveBtn').disabled = false; $('enSaveBtn').textContent = 'Save Changes';
+    if (error) { $('enErr').textContent = error.message; return; }
+    closeModal('formModal');
+    toast('Notice updated', 'ok');
+    loadNotices();
+  });
+  openModal('formModal');
 }
 
 function updateNoticeBoardAdminUI() {
@@ -1775,7 +1827,7 @@ $('noticeClearBtn').addEventListener('click', async () => {
 });
 
 /* ============================================================
-   ADMIN PANEL
+   ADMIN — ADD LISTING
    ============================================================ */
 $('addListingBtn').addEventListener('click', async () => {
   const title = $('alTitle').value.trim();
@@ -1798,15 +1850,24 @@ $('addListingBtn').addEventListener('click', async () => {
       images.push(pub.publicUrl);
     }
   }
+
+  // Determine sort_order: max + 1  (so new listings appear at bottom)
+  let nextOrder = 1;
+  const { data: maxRow } = await sb.from('listings').select('sort_order').order('sort_order', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
+  if (maxRow && typeof maxRow.sort_order === 'number') nextOrder = maxRow.sort_order + 1;
+
   const { error } = await sb.from('listings').insert({
-    title, description: desc, price_usd: price, currency, category: cat, images
+    title, description: desc, price_usd: price, currency, category: cat, images,
+    sort_order: nextOrder
   });
   $('addListingBtn').disabled = false; $('addListingBtn').textContent = 'Publish Listing';
   if (error) { err.textContent = error.message; return; }
   toast('Listing published', 'ok');
   $('alTitle').value = ''; $('alDesc').value = ''; $('alPrice').value = ''; $('alImages').value = ''; $('imgPreview').innerHTML = '';
   loadListings();
+  if (ME.role === 'admin' && $('adminListings').style.display !== 'none') loadAdminListings();
 });
+
 $('alImages').addEventListener('change', () => {
   const preview = $('imgPreview');
   preview.innerHTML = '';
@@ -1822,6 +1883,9 @@ $('alImages').addEventListener('change', () => {
   });
 });
 
+/* ============================================================
+   ADMIN — PUBLIC CHAT CONTROL
+   ============================================================ */
 $('chatToggleBtn').addEventListener('click', async () => {
   const current = SETTINGS.public_chat_enabled === 'true';
   const newVal = current ? 'false' : 'true';
@@ -1845,6 +1909,9 @@ $('chatLockBtn').addEventListener('click', async () => {
   await loadSettings();
 });
 
+/* ============================================================
+   ADMIN — SECTION TOGGLES
+   ============================================================ */
 $('toggleListings').addEventListener('click', () => {
   const box = $('adminListings');
   const isOpen = box.style.display !== 'none';
@@ -1880,22 +1947,48 @@ async function loadAdminData() {
   await Promise.all([loadAdminListings(), loadAdminOrders(), loadAdminUsers()]);
 }
 
+/* ============================================================
+   ADMIN — LISTINGS  (reorder + edit + hide + delete)
+   ============================================================ */
 async function loadAdminListings() {
-  const { data: listings, error } = await sb.from('listings').select('*').order('created_at', { ascending: false });
+  const { data: listings, error } = await sb.from('listings')
+    .select('*')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
   if (error) console.error('Listings error:', error);
   $('listingCount').textContent = listings?.length || 0;
-  $('adminListings').innerHTML = (listings || []).map(l => {
+
+  $('adminListings').innerHTML = (listings || []).map((l, idx) => {
     const img = (l.images && l.images[0]) || '';
     const priceStr = fmtPrice(l.price_usd, l.currency);
+    const isFirst = idx === 0;
+    const isLast = idx === (listings.length - 1);
     return `<div class="admin-listing">
+      <div class="sort-col">
+        <button class="sort-btn" data-lmove="${l.id}" data-dir="up" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+        <button class="sort-btn" data-lmove="${l.id}" data-dir="down" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+      </div>
       <div class="thumb">${img ? `<img src="${esc(img)}" alt="">` : ''}</div>
-      <div class="body"><b>${esc(l.title)}</b><small>${esc(priceStr)} · ${l.status}</small></div>
-      <div class="row">
-        <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? 'HIDE' : 'SHOW'}</button>
-        <button class="btn tiny danger" data-ldelete="${l.id}">DEL</button>
+      <div class="body"><b>${esc(l.title)}</b><small>#${idx+1} · ${esc(priceStr)} · ${l.status}</small></div>
+      <div class="ctrls">
+        <div class="row">
+          <button class="btn tiny gold" data-ledit="${l.id}" title="Edit">✎</button>
+          <button class="btn tiny ghost" data-ltoggle="${l.id}">${l.status === 'active' ? '👁' : '🚫'}</button>
+          <button class="btn tiny danger" data-ldelete="${l.id}">🗑</button>
+        </div>
       </div>
     </div>`;
   }).join('') || '<div style="color:var(--muted);font-size:11px">No listings</div>';
+
+  document.querySelectorAll('[data-lmove]').forEach(b => {
+    b.addEventListener('click', () => moveListing(b.dataset.lmove, b.dataset.dir));
+  });
+  document.querySelectorAll('[data-ledit]').forEach(b => {
+    b.addEventListener('click', () => {
+      const l = listings.find(x => x.id === b.dataset.ledit);
+      if (l) openEditListing(l);
+    });
+  });
   document.querySelectorAll('[data-ltoggle]').forEach(b => {
     b.addEventListener('click', async () => {
       const l = listings.find(x => x.id === b.dataset.ltoggle);
@@ -1916,6 +2009,143 @@ async function loadAdminListings() {
   });
 }
 
+/* Move listing up / down — reassign sequential sort_order */
+async function moveListing(id, direction) {
+  const { data: listings, error } = await sb.from('listings')
+    .select('id, sort_order, created_at')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  if (error || !listings) { toast('Reorder failed', 'err'); return; }
+
+  const idx = listings.findIndex(l => l.id === id);
+  if (idx < 0) return;
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= listings.length) return;
+
+  // Swap positions in the array
+  [listings[idx], listings[swapIdx]] = [listings[swapIdx], listings[idx]];
+
+  // Reassign sequential sort_order 1..N
+  for (let i = 0; i < listings.length; i++) {
+    await sb.from('listings').update({ sort_order: i + 1 }).eq('id', listings[i].id);
+  }
+
+  toast('Order updated', 'ok');
+  loadAdminListings();
+  loadListings();
+}
+
+/* ============================================================
+   ADMIN — EDIT LISTING  (modal, reuses formModal)
+   ============================================================ */
+function openEditListing(listing) {
+  if (ME.role !== 'admin') return;
+  $('formModalTitle').textContent = 'Edit Listing';
+  const imgs = (listing.images || []);
+  $('formModalBody').innerHTML = `
+    <div class="field"><label>Title</label>
+      <input type="text" id="elTitle" maxlength="80" value="${esc(listing.title || '')}">
+    </div>
+    <div class="field"><label>Description</label>
+      <textarea id="elDesc" rows="4">${esc(listing.description || '')}</textarea>
+    </div>
+    <div class="field"><label>Price</label>
+      <input type="number" id="elPrice" step="0.01" min="0.01" value="${listing.price_usd ?? ''}">
+    </div>
+    <div class="field"><label>Currency</label>
+      <select id="elCurrency">
+        <option value="LKR" ${listing.currency === 'LKR' ? 'selected' : ''}>Rs. (LKR - Sri Lankan Rupee)</option>
+        <option value="USD" ${listing.currency === 'USD' ? 'selected' : ''}>$ (USD - US Dollar)</option>
+      </select>
+    </div>
+    <div class="field"><label>Category</label>
+      <input type="text" id="elCat" value="${esc(listing.category || 'general')}">
+    </div>
+    <div class="field"><label>Current Images</label>
+      ${imgs.length
+        ? `<div class="img-preview" id="elCurrentImgs">${imgs.map((u, i) => `
+            <div class="prev">
+              <img src="${esc(u)}" alt="">
+            </div>`).join('')}</div>`
+        : '<div style="font-size:11px;color:var(--muted);padding:6px">No images</div>'}
+    </div>
+    <div class="field"><label>Replace Images (optional · max 4)</label>
+      <input type="file" id="elImages" accept="image/*" multiple>
+      <div class="img-preview" id="elNewPreview"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn gold" id="elSaveBtn" style="flex:1">Save Changes</button>
+    </div>
+    <div class="auth-err" id="elErr"></div>
+  `;
+
+  $('elImages').addEventListener('change', () => {
+    const preview = $('elNewPreview');
+    preview.innerHTML = '';
+    Array.from($('elImages').files).slice(0, 4).forEach(f => {
+      const r = new FileReader();
+      r.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'prev';
+        div.innerHTML = `<img src="${e.target.result}">`;
+        preview.appendChild(div);
+      };
+      r.readAsDataURL(f);
+    });
+  });
+
+  $('elSaveBtn').addEventListener('click', async () => {
+    const title = $('elTitle').value.trim();
+    const desc = $('elDesc').value.trim();
+    const price = parseFloat($('elPrice').value);
+    const currency = $('elCurrency').value || 'LKR';
+    const cat = $('elCat').value.trim() || 'general';
+    const err = $('elErr'); err.textContent = '';
+    if (!title || !desc || !price || price <= 0) {
+      err.textContent = 'Title, description and valid price required';
+      return;
+    }
+    $('elSaveBtn').disabled = true;
+    $('elSaveBtn').textContent = 'SAVING...';
+
+    // Upload new images if provided, else keep old ones
+    const files = $('elImages').files;
+    let finalImages = imgs;
+    if (files && files.length > 0) {
+      const newImgs = [];
+      for (let i = 0; i < Math.min(files.length, 4); i++) {
+        const f = files[i];
+        const ext = f.name.split('.').pop();
+        const path = `listing_${Date.now()}_${i}.${ext}`;
+        const { error: upErr } = await sb.storage.from('listing-images').upload(path, f);
+        if (!upErr) {
+          const { data: pub } = sb.storage.from('listing-images').getPublicUrl(path);
+          newImgs.push(pub.publicUrl);
+        }
+      }
+      if (newImgs.length > 0) finalImages = newImgs;
+    }
+
+    const { error } = await sb.from('listings').update({
+      title, description: desc, price_usd: price, currency,
+      category: cat, images: finalImages
+    }).eq('id', listing.id);
+
+    $('elSaveBtn').disabled = false;
+    $('elSaveBtn').textContent = 'Save Changes';
+    if (error) { err.textContent = error.message; return; }
+    closeModal('formModal');
+    toast('Listing updated', 'ok');
+    loadAdminListings();
+    loadListings();
+  });
+
+  openModal('formModal');
+}
+
+/* ============================================================
+   ADMIN — ORDERS
+   ============================================================ */
 async function loadAdminOrders() {
   const { data: orders, error } = await sb.from('orders').select('*, listings(title, images, currency)').order('created_at', { ascending: false });
   if (error) { console.error('Admin orders error:', error); toast('Orders load failed: ' + error.message, 'err'); return; }
@@ -1998,6 +2228,9 @@ async function loadAdminOrders() {
   });
 }
 
+/* ============================================================
+   ADMIN — USERS
+   ============================================================ */
 async function loadAdminUsers() {
   await loadProfilesCache();
   const users = Object.values(PROFILES).sort((a,b) => {
@@ -2047,6 +2280,9 @@ async function loadAdminUsers() {
   });
 }
 
+/* ============================================================
+   ADMIN — PUBLIC MESSAGES
+   ============================================================ */
 async function loadAdminPubMsgs() {
   const { data } = await sb.from('public_messages').select('*').order('created_at', { ascending: false }).limit(200);
   $('adminPubMsgs').innerHTML = (data || []).map(m => {
@@ -2111,7 +2347,7 @@ function setupRealtime() {
   listChannel = sb.channel('rt-listings-' + ME.id)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, () => {
       loadListings();
-      if (ME.role === 'admin') loadAdminListings();
+      if (ME.role === 'admin' && $('adminListings').style.display !== 'none') loadAdminListings();
     })
     .subscribe();
 
@@ -2148,7 +2384,7 @@ function setupRealtime() {
 }
 
 /* ============================================================
-   INIT  (splash removed — no setTimeout)
+   INIT
    ============================================================ */
 applyLogo();
 (async () => {
